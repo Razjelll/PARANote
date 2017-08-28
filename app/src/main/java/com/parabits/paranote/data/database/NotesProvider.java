@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.parabits.paranote.data.database.tables.LabelsTable;
 import com.parabits.paranote.data.database.tables.NotesTable;
 
 import java.util.ArrayList;
@@ -29,9 +30,12 @@ public class NotesProvider extends ContentProvider {
 
     static final String PROVIDER_NAME = "com.parabits.paranote.NotesProvider";
     static final String NOTES_URL = "content://" + PROVIDER_NAME + "/note";
+    static final String LABELS_URL = "content://" + PROVIDER_NAME + "/label";
 
     private static final int SINGLE_NOTE = 10;
     private static final int ALL_NOTES = 20;
+    private static final int SINGLE_LABEL = 30;
+    private static final int ALL_LABELS = 40;
 
     private final String[] ALL_COLUMNS = {"*"};
 
@@ -40,6 +44,8 @@ public class NotesProvider extends ContentProvider {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(PROVIDER_NAME, "note", ALL_NOTES);
         uriMatcher.addURI(PROVIDER_NAME, "note/#", SINGLE_NOTE);
+        uriMatcher.addURI(PROVIDER_NAME, "label", ALL_LABELS);
+        uriMatcher.addURI(PROVIDER_NAME, "label/#", SINGLE_LABEL);
     }
 
     public DbOpenHelper openHelper;
@@ -68,6 +74,14 @@ public class NotesProvider extends ContentProvider {
                 String noteID = uri.getLastPathSegment();
                 selectionArgs = fixSelectionArgs(selectionArgs, noteID);
                 return database.query(NotesTable.TABLE_NAME, projection, selection, selectionArgs, null,null, sortOrder);
+            case ALL_LABELS:
+                return database.query(LabelsTable.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+            case SINGLE_LABEL:
+                selection = selection == null ? LabelsTable.ID_COLUMN + "=?" :
+                        LabelsTable.ID_COLUMN + "=? AND (" + selection + ")";
+                String labelID = uri.getLastPathSegment();
+                selectionArgs = fixSelectionArgs(selectionArgs, labelID);
+                return database.query(LabelsTable.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -114,9 +128,16 @@ public class NotesProvider extends ContentProvider {
         Uri resultUri = null;
         switch (uriMatcher.match(uri)){
             case ALL_NOTES:
-                long id = database.insert(NotesTable.TABLE_NAME, "", values);
-                if(id==-1) throw new SQLException("Insertion data error");
-                resultUri = Uri.withAppendedPath(uri, String.valueOf(id));
+                long noteID = database.insert(NotesTable.TABLE_NAME, "", values);
+                if(noteID==-1) throw new SQLException("Insertion note failed");
+                resultUri = Uri.withAppendedPath(uri, String.valueOf(noteID));
+                //TODO sprawdzić co tutaj jest dokładnie zwracane
+                break;
+            case ALL_LABELS:
+                long labelID = database.insert(LabelsTable.TABLE_NAME, "", values);
+                if(labelID == -1) throw new SQLException("Insertion label failed");
+                resultUri = Uri.withAppendedPath(uri, String.valueOf(labelID));
+                break;
         }
         return resultUri;
     }
@@ -155,15 +176,28 @@ public class NotesProvider extends ContentProvider {
             case ALL_NOTES:
                 count = database.delete(NotesTable.TABLE_NAME,selection, selectionArgs); break;
             case SINGLE_NOTE:
-                String id = uri.getPathSegments().get(1);
-                selection = selection == null ? NotesTable.ID_COLUMN +"=?" :
-                        NotesTable.ID_COLUMN +"=? AND (" + selection +")";
+                String noteID = uri.getLastPathSegment();
+                selection = fixSelectionString(selection, NotesTable.ID_COLUMN);
+                selectionArgs = fixSelectionArgs(selectionArgs, noteID);
                 count = database.delete(NotesTable.TABLE_NAME, selection, selectionArgs); break;
+            case ALL_LABELS:
+                count = database.delete(LabelsTable.TABLE_NAME, selection, selectionArgs); break;
+            case SINGLE_LABEL:
+                String labelID = uri.getLastPathSegment();
+                selection =fixSelectionString(selection, LabelsTable.ID_COLUMN);
+                selectionArgs = fixSelectionArgs(selectionArgs, labelID);
+                count = database.delete(LabelsTable.TABLE_NAME, selection, selectionArgs); break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
         getContext().getContentResolver().notifyChange(uri, null); //TODO zobaczyć do czego to służy
         return count;
+    }
+
+    private String fixSelectionString(String selection, String idColumn)
+    {
+        return selection == null ? idColumn + "=?" :
+                idColumn + "=? AND (" + selection + ")";
     }
 
     @Override
@@ -175,11 +209,17 @@ public class NotesProvider extends ContentProvider {
             case ALL_NOTES:
                 count = database.update(NotesTable.TABLE_NAME, contentValues, selection, selectionArgs); break;
             case SINGLE_NOTE:
-                String id = uri.getPathSegments().get(1);
-                selection = selection == null ? NotesTable.ID_COLUMN +"=?" :
-                        NotesTable.ID_COLUMN +"=? AND (" + selection +")";
-                selectionArgs = fixSelectionArgs(selectionArgs, id);
+                String noteID = uri.getLastPathSegment();
+                selection = fixSelectionString(selection, NotesTable.ID_COLUMN);
+                selectionArgs = fixSelectionArgs(selectionArgs, noteID);
                 count  = database.update(NotesTable.TABLE_NAME, contentValues, selection,selectionArgs); break;
+            case ALL_LABELS:
+                count = database.update(LabelsTable.TABLE_NAME, contentValues, selection, selectionArgs); break;
+            case SINGLE_LABEL:
+                String labelID = uri.getLastPathSegment();
+                selection = fixSelectionString(selection, LabelsTable.ID_COLUMN);
+                selectionArgs = fixSelectionArgs(selectionArgs, labelID);
+                count = database.update(LabelsTable.TABLE_NAME, contentValues, selection, selectionArgs); break;
             default:
                 throw new IllegalArgumentException("Unknow URI " + uri);
         }
@@ -208,14 +248,25 @@ public class NotesProvider extends ContentProvider {
 
     public static Uri getUri(Table table)
     {
-        String url = getUrl(table);
+       /* String url = getUrl(table);
         return Uri.parse(url);
+        */
+       switch (table)
+       {
+           case NOTES:
+               return Uri.parse(NOTES_URL);
+           case LABELS:
+               return Uri.parse(LABELS_URL);
+           default:
+               throw new IllegalArgumentException("Invalid table");
+       }
     }
 
     public static Uri getUri(Table table, long id)
     {
-        String url = getUrl(table) + "/" + String.valueOf(id);
-        return Uri.parse(url);
+        return Uri.withAppendedPath(getUri(table), String.valueOf(id));
+        /*String url = getUrl(table) + "/" + String.valueOf(id);
+        return Uri.parse(url);*/
     }
 
     private static String getUrl(Table table)
@@ -229,5 +280,6 @@ public class NotesProvider extends ContentProvider {
                 throw new IllegalArgumentException("Unknown table");
         }
     }
+
 
 }

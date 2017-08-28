@@ -39,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void startEditNoteActivity()
     {
-        //Intent intent = new Intent(this, EditNoteActivity.class);
-        Intent intent = new Intent(this, LabelActivity.class);
+        Intent intent = new Intent(this, EditNoteActivity.class);
+        //Intent intent = new Intent(this, LabelActivity.class);
         startActivity(intent);
     }
 }

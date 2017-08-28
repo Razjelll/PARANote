@@ -1,5 +1,7 @@
 package com.parabits.paranote.data.models;
 
+import com.parabits.paranote.data.parser.NoteElement;
+
 import java.util.List;
 
 public class Note {
@@ -12,6 +14,8 @@ public class Note {
     private List<Label> mLabels;
     private Date mCreationDate;
     private Date mUpdateDate;
+
+    private List<NoteElement> m_note_elements;
 
     public long getID(){return mID;}
     public String getTitle() {return mTitle;}
@@ -48,6 +52,5 @@ public class Note {
     }
     public void setCreationDate(Date date) {mCreationDate = date;}
     public void setUpdateDate(Date date) {mUpdateDate = date;}
-
 
 }

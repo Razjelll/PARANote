@@ -23,12 +23,17 @@ public class LabelDao {
         m_content_resolver = context.getContentResolver();
     }
 
-    public void add(Label label)
+    public long add(Label label)
     {
         ContentValues values = new ContentValues();
         values.put(LabelsTable.NAME_COLUMN, label.getName());
         Uri uri = NotesProvider.getUri(NotesProvider.Table.LABELS);
-        m_content_resolver.insert(uri, values);
+        Uri resultUri  = m_content_resolver.insert(uri, values); //TODO dodać sprawdzenie czy udało się dodać dane do bazy danych i zwrócenie id
+        if(resultUri != null)
+        {
+            return Integer.parseInt(resultUri.getLastPathSegment());
+        }
+        return -1;
     }
 
     public boolean delete(long id)
@@ -65,7 +70,7 @@ public class LabelDao {
     {
         List<Label> labelsList = new ArrayList<>();
         String[] columns = {"*"};
-        Uri uri = NotesProvider.getUri(NotesProvider.Table.NOTES);
+        Uri uri = NotesProvider.getUri(NotesProvider.Table.LABELS);
         Cursor cursor = m_content_resolver.query(uri, columns, null, null, null);
         if(cursor.moveToFirst())
         {

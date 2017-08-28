@@ -26,6 +26,7 @@ public class NoteDao {
 
     public void add(Note note)
     {
+        //TODO tutaj zrobić jakąś klasę, która będzie tworzyłą ContentValues z modelu
         ContentValues values = new ContentValues();
         values.put(NotesTable.TITLE_COLUMN, note.getTitle());
         values.put(NotesTable.CONTENT_COLUMN, note.getContent());
@@ -39,10 +40,8 @@ public class NoteDao {
     {
         if(id > 0)
         {
-            String selection = NotesTable.ID_COLUMN + "=?";
-            String[] selectionArgs = {String.valueOf(id)};
             Uri uri = NotesProvider.getUri(NotesProvider.Table.NOTES, id);
-            int deletedRows = m_content_resolver.delete(uri, selection, selectionArgs);
+            int deletedRows = m_content_resolver.delete(uri, null, null);
             return deletedRows > 0;
         }
         return false;

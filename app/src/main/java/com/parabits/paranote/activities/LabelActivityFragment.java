@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -13,6 +14,10 @@ import android.widget.ListView;
 
 import com.parabits.paranote.R;
 import com.parabits.paranote.adapters.LabelAdapter;
+import com.parabits.paranote.data.database.LabelDao;
+import com.parabits.paranote.data.models.Label;
+
+import java.util.List;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -30,6 +35,8 @@ public class LabelActivityFragment extends Fragment {
     private ImageButton m_adding_cancel_button;
     private EditText m_adding_edit_text;
     private ImageButton m_save_label_button;
+
+    private LabelAdapter m_adapter;
 
     public LabelActivityFragment() {
     }
@@ -66,6 +73,10 @@ public class LabelActivityFragment extends Fragment {
             }
         });
 
+        LabelDao dao = new LabelDao(getContext());
+        List<Label> labelsList = dao.getAll();
+        m_adapter = new LabelAdapter(getContext(), R.layout.item_label, labelsList);
+        m_list_view.setAdapter(m_adapter);
         //TODO pobranie etykiet z bazy danych
         return view;
     }
@@ -101,6 +112,15 @@ public class LabelActivityFragment extends Fragment {
     }
     private void saveLabel(String name)
     {
-
+        LabelDao dao = new LabelDao(getContext());
+        Label label = new Label(name);
+        long id = dao.add(label);
+        if(id >0)
+        {
+            label.setID(id);
+            m_adapter.add(label);
+            m_add_label_container.setVisibility(View.GONE);
+        }
+        //TODO wyświetlić komunikat o błędzie zapisu. Np o tym że taka dana już istnieje w bazie
     }
 }

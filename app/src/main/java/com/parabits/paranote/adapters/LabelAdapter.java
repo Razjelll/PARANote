@@ -35,7 +35,7 @@ public class LabelAdapter extends ArrayAdapter{
     @Override
     public View getView(int position, View view, ViewGroup viewGroup)
     {
-        ViewHolder viewHolder;
+        final ViewHolder viewHolder;
         View rowView = view;
         if(rowView == null)
         {
@@ -43,6 +43,7 @@ public class LabelAdapter extends ArrayAdapter{
             rowView = inflater.inflate(m_resource, null);
             viewHolder = new ViewHolder(rowView);
             rowView.setTag(viewHolder);
+
         } else {
             viewHolder = (ViewHolder)rowView.getTag();
         }
@@ -51,7 +52,20 @@ public class LabelAdapter extends ArrayAdapter{
         viewHolder.setNameText(label.getName());
         viewHolder.check(label.isChecked());
 
-        return view;
+        return rowView;
+    }
+
+    public void add(Label label)
+    {
+        m_items.add(0, label); //TODO zrobiono wstawianie na pierwszym miejscu. Zajrzeć czy tak może być
+        notifyDataSetChanged();
+    }
+
+    public void changeChecked(int position)
+    {
+        Label label = m_items.get(position);
+        label.setChecked(!label.isChecked());
+        notifyDataSetChanged();
     }
 
     private class ViewHolder
@@ -73,6 +87,11 @@ public class LabelAdapter extends ArrayAdapter{
         public void check(boolean checked)
         {
             m_check_box.setChecked(checked);
+        }
+
+        public void changeChecked()
+        {
+            m_check_box.setChecked(!m_check_box.isChecked());
         }
     }
 }
