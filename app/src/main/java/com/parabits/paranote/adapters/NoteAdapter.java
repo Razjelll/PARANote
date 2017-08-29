@@ -52,6 +52,13 @@ public class NoteAdapter extends ArrayAdapter
         return rowView;
     }
 
+    @Override
+    public Note getItem(int position)
+    {
+        return m_items.get(position);
+    }
+
+
     private class ViewHolder
     {
         private TextView m_title_text_view;

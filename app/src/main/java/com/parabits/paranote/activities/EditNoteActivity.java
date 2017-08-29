@@ -15,23 +15,19 @@ import com.parabits.paranote.R;
 import com.parabits.paranote.data.database.NoteDao;
 import com.parabits.paranote.data.models.Date;
 import com.parabits.paranote.data.models.Note;
-import com.parabits.paranote.data.parser.NoteElement;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.parabits.paranote.views.NoteContainer;
 
 public class EditNoteActivity extends AppCompatActivity {
 
     private final int PICK_IMAGE = 9932;
 
     private EditText m_title_edit_text;
-    private ViewGroup m_note_container;
-    private List<View> m_note_views;
     private ImageButton m_save_button;
     private ImageButton m_add_text_button;
     private ImageButton m_photo_button;
 
-    private List<NoteElement> m_note_elements;
+    private NoteContainer m_note_view;
+
 
     private boolean m_edited;
 
@@ -42,8 +38,17 @@ public class EditNoteActivity extends AppCompatActivity {
 
         setupToolbar();
         setupControls();
+        getData();
+    }
 
-        m_note_views = new ArrayList<>();
+    private void getData()
+    {
+        Intent intent = getIntent();
+        Note note = intent.getParcelableExtra("note");
+        if(note != null)
+        {
+            m_note_view.init(note.getContent());
+        }
     }
 
     private void setupToolbar()
@@ -55,10 +60,12 @@ public class EditNoteActivity extends AppCompatActivity {
     private void setupControls()
     {
         m_title_edit_text = (EditText) findViewById(R.id.title_edit_text);
-        m_note_container = (ViewGroup) findViewById(R.id.note_container);
         m_save_button = (ImageButton)findViewById(R.id.save_button);
         m_add_text_button = (ImageButton) findViewById(R.id.add_note_button);
         m_photo_button = (ImageButton) findViewById(R.id.photo_button);
+
+        m_note_view = (NoteContainer) findViewById(R.id.note_view);
+
         m_save_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -69,7 +76,8 @@ public class EditNoteActivity extends AppCompatActivity {
         m_add_text_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addTextElement();
+                //addTextElement();
+                m_note_view.addTextElement();
             }
         });
 
@@ -92,34 +100,19 @@ public class EditNoteActivity extends AppCompatActivity {
             if(data != null)
             {
                 Uri uri = data.getData();
-                addImageElement(uri);
+                //Uri uri = Uri.parse("content://media/external/images/media/107");
+                //addImageElement(uri);
+                m_note_view.addImageElement(uri);
             }
         }
-    }
-
-    private void addImageElement(Uri uri)
-    {
-        ImageView imageView = new ImageView(getApplicationContext());
-        imageView.setImageURI(uri);
-        imageView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        imageView.setAdjustViewBounds(true);
-        m_note_container.addView(imageView);
-        m_note_views.add(imageView);
-    }
-
-    private void addTextElement()
-    {
-        EditText editText = new EditText(getApplicationContext());
-        m_note_container.addView(editText);
-        m_note_views.add(editText);
     }
 
     private void saveNote(boolean edited)
     {
         Note note = new Note();
         note.setTitle(m_title_edit_text.getText().toString());
-        note.setContent(m_title_edit_text.getText().toString());
+        String content = m_note_view.toString();
+        note.setContent(content);
         NoteDao dao = new NoteDao(getApplicationContext());
         Date nowDate = Date.getNow();
         if(edited) //edytowanie notatki
@@ -131,7 +124,7 @@ public class EditNoteActivity extends AppCompatActivity {
             note.setUpdateDate(nowDate);
             dao.add(note);
         }
-
     }
+
 
 }

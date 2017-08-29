@@ -5,6 +5,13 @@ import java.util.List;
 public class PhotoElement extends NoteElement {
 
     //TODO dorobić zmienną która określa czy obrazek jest załącznikiem czy ma zostać pobrany z
+
+    public PhotoElement()
+    {
+        super();
+        m_type = Type.PHOTO;
+    }
+
     public PhotoElement(String content) {
         super(content);
         m_type = Type.PHOTO;

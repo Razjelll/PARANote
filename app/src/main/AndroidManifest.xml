@@ -29,6 +29,7 @@
             android:name=".activities.LabelActivity"
             android:label="@string/title_activity_label"
             android:theme="@style/AppTheme.NoActionBar"></activity>
-    </application>
 
+    </application>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 </manifest>

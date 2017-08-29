@@ -6,23 +6,28 @@ import java.util.List;
 
 abstract public class NoteElement {
 
-    public static String MARKER_START = "<";
-    public static String MARKER_END = "/>";
-    public static String CONTENT_START = ">";
-    public static String CONTENT_END = "<";
-    public static String TEXT_MARKER = "text";
-    public static String PHOTO_MARKER = "photo";
-    public static String RECORD_MARKER = "photo";
-    public static String HANDWRITTING_MARKER = "hand";
-    public static String CODE_MARKER = "code";
+    public static final  String MARKER_START = "<";
+    public static final String MARKER_END = "/>";
+    public static final String CONTENT_START = ">";
+    public static final String CONTENT_END = "<";
+    public static final String TEXT_MARKER = "text";
+    public static final String PHOTO_MARKER = "photo";
+    public static final String RECORD_MARKER = "record";
+    public static final String HANDWRITTING_MARKER = "hand";
+    public static final String CODE_MARKER = "code";
 
     public enum Type
     {
-        TEXT,
-        PHOTO,
-        RECORD,
-        HANDWRITTING,
-        CODE
+        TEXT(TEXT_MARKER),
+        PHOTO(PHOTO_MARKER),
+        RECORD(RECORD_MARKER),
+        HANDWRITTING(HANDWRITTING_MARKER),
+        CODE(CODE_MARKER);
+
+        private String m_name;
+        private Type(String name) {m_name = name;}
+
+        public String getName() {return m_name;}
     }
     //TODO zastanowić się jeszcze nad możliwymi rodzajami notatki
 
@@ -37,6 +42,11 @@ abstract public class NoteElement {
     protected List<ElementParameter> m_parameters;
     /** Okresla czy element został edytowany. Informacja ta przydatna jest podczas zapisu elementu. */
     protected boolean m_changed;
+
+    public NoteElement()
+    {
+        m_parameters = new ArrayList<>();
+    }
 
     public NoteElement(String content)
     {
@@ -87,7 +97,7 @@ abstract public class NoteElement {
     {
         StringBuilder builder = new StringBuilder();
         builder.append(MARKER_START);
-
+        builder.append(m_type.getName());
         for (ElementParameter parameter: m_parameters) {
             builder.append(" ");
             builder.append(parameter.getName());
@@ -98,6 +108,7 @@ abstract public class NoteElement {
         builder.append(CONTENT_START);
         builder.append(m_content);
         builder.append(CONTENT_END);
+        builder.append(m_type.getName());
         builder.append(MARKER_END);
 
         return builder.toString();

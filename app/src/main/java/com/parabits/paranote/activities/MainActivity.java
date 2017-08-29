@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private ListView m_notes_list_view;
+    private NoteAdapter m_note_adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,21 +29,35 @@ public class MainActivity extends AppCompatActivity {
         tempButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startEditNoteActivity();
+                startEditNoteActivity(null);
             }
         });
 
         m_notes_list_view = (ListView) findViewById(R.id.list);
         List<Note> notesList = new NoteDao(this).getAll();
-        NoteAdapter adapter = new NoteAdapter(this, R.layout.item_note, notesList);
-        m_notes_list_view.setAdapter(adapter);
+        m_note_adapter = new NoteAdapter(this, R.layout.item_note, notesList);
+        m_notes_list_view.setAdapter(m_note_adapter);
+
+        m_notes_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Note note = m_note_adapter.getItem(i);
+                startEditNoteActivity(note);
+            }
+        });
     }
 
-    private void startEditNoteActivity()
+    private void startEditNoteActivity(Note note)
     {
         Intent intent = new Intent(this, EditNoteActivity.class);
+        if(note != null)
+        {
+            intent.putExtra("note", note);
+        }
         //Intent intent = new Intent(this, LabelActivity.class);
         startActivity(intent);
     }
+
+
 }
 
