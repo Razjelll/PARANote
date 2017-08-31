@@ -6,27 +6,28 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 
 import com.parabits.paranote.R;
 import com.parabits.paranote.data.database.NoteDao;
 import com.parabits.paranote.data.models.Date;
 import com.parabits.paranote.data.models.Note;
-import com.parabits.paranote.views.NoteContainer;
+import com.parabits.paranote.views.NoteView;
+import com.parabits.paranote.views.ParaToolbar;
 
 public class EditNoteActivity extends AppCompatActivity {
 
     private final int PICK_IMAGE = 9932;
 
     private EditText m_title_edit_text;
-    private ImageButton m_save_button;
+    /*private ImageButton m_save_button;
     private ImageButton m_add_text_button;
-    private ImageButton m_photo_button;
+    private ImageButton m_photo_button;*/
 
-    private NoteContainer m_note_view;
+    private ParaToolbar m_bottom_toolbar;
+
+    private NoteView m_note_view;
 
 
     private boolean m_edited;
@@ -60,13 +61,14 @@ public class EditNoteActivity extends AppCompatActivity {
     private void setupControls()
     {
         m_title_edit_text = (EditText) findViewById(R.id.title_edit_text);
-        m_save_button = (ImageButton)findViewById(R.id.save_button);
+        /*m_save_button = (ImageButton)findViewById(R.id.save_button);
         m_add_text_button = (ImageButton) findViewById(R.id.add_note_button);
-        m_photo_button = (ImageButton) findViewById(R.id.photo_button);
+        m_photo_button = (ImageButton) findViewById(R.id.photo_button);*/
+        m_bottom_toolbar = (ParaToolbar) findViewById(R.id.bottom_toolbar);
 
-        m_note_view = (NoteContainer) findViewById(R.id.note_view);
+        m_note_view = (NoteView) findViewById(R.id.note_view);
 
-        m_save_button.setOnClickListener(new View.OnClickListener() {
+        /*m_save_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 saveNote(m_edited);
@@ -89,7 +91,30 @@ public class EditNoteActivity extends AppCompatActivity {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent, "Select pircture"), PICK_IMAGE);
             }
-        });
+        });*/
+        m_bottom_toolbar.addConstantsButton(android.R.drawable.ic_input_add, "AddText", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                m_note_view.addTextElement();
+            }
+        }, 0);
+
+        m_bottom_toolbar.addConstantsButton(android.R.drawable.ic_menu_camera, "AddPhoto", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.setType("image/");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Select pircture"), PICK_IMAGE);
+            }
+        }, 1);
+
+        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
+        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
+        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
+        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
+        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
+
     }
 
     @Override

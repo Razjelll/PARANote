@@ -10,36 +10,20 @@
         android:layout_height="wrap_content"
         android:hint="@string/title"/>
 
-    <com.parabits.paranote.views.NoteContainer
+    <com.parabits.paranote.views.NoteView
         android:id="@+id/note_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/toolbar"
-        android:layout_below="@id/title_edit_text"
+        android:layout_above="@+id/bottom_toolbar"
+        android:layout_below="@+id/title_edit_text"
         />
 
 
-    <LinearLayout android:id="@+id/toolbar"
+    <com.parabits.paranote.views.ParaToolbar
+        android:id="@+id/bottom_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_alignParentBottom="true">
-        <ImageButton android:id="@+id/add_note_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@mipmap/ic_launcher"/>
-        <ImageButton android:id="@+id/photo_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@mipmap/ic_launcher"/>
-        <View android:id="@+id/separator"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-        <ImageButton android:id="@+id/save_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@mipmap/ic_launcher"/>
-    </LinearLayout>
+        android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

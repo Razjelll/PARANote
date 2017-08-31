@@ -1,20 +1,18 @@
 package com.parabits.paranote.data.parser;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
-import android.view.View;
-import android.view.ViewGroup;
-import android.webkit.URLUtil;
-import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.parabits.paranote.views.INoteView;
+import com.parabits.paranote.utils.BitmapUtils;
+import com.parabits.paranote.views.INoteElementView;
 import com.parabits.paranote.views.NoteImageView;
 import com.parabits.paranote.views.NoteTextView;
 
 public class NoteViewCreator {
 
-    public static INoteView create(NoteElement element, Context context)
+    public static INoteElementView create(NoteElement element, Context context)
     {
         switch (element.getType())
         {
@@ -27,7 +25,7 @@ public class NoteViewCreator {
         }
     }
 
-    private static INoteView createTextView(NoteElement element, Context context)
+    private static INoteElementView createTextView(NoteElement element, Context context)
     {
         NoteTextView editText = new NoteTextView(context);
         editText.setText(element.getContent());
@@ -35,14 +33,19 @@ public class NoteViewCreator {
         return editText;
     }
 
-    private static INoteView createImageView(NoteElement element, Context context)
+    private static final int IMAGE_SIZE = 500;
+
+    private static INoteElementView createImageView(NoteElement element, Context context)
     {
         NoteImageView imageView = new NoteImageView(context);
-        //Uri uri = Uri.parse(element.getContent());
-        //Uri uri = Uri.parse("content://media/internal/images/media/107");
         Uri uri = Uri.parse(element.getContent());
-        boolean isValid = URLUtil.isValidUrl(element.getContent());
-        imageView.setImageURI(uri);
+        Bitmap orginalBitmap = BitmapUtils.getBitmap(context, uri); //bitmapa z orginalnego obrazka
+        float aspectRatio = (float)orginalBitmap.getWidth() / orginalBitmap.getHeight(); //TODO zobaczyć czy te proporcje działają dobrze
+        Bitmap resizedBitmap = BitmapUtils.resize(orginalBitmap, (int)(IMAGE_SIZE * aspectRatio), (int)(IMAGE_SIZE * 1/aspectRatio)); // bitmapa pomniejszonego obrazka\
+
+        //imageView.setImageURI(uri);
+        imageView.setUri(uri); //zapisujemy uri do orginalnego obrazka
+        imageView.setImageBitmap(resizedBitmap); //ustawiamy zmniejszoną bitmapę do wyświetlenia
         imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         imageView.setAdjustViewBounds(true);
 

@@ -1,16 +1,14 @@
 package com.parabits.paranote.data.parser;
 
 import android.net.Uri;
-import android.view.View;
 
-import com.parabits.paranote.utils.UriUtils;
-import com.parabits.paranote.views.INoteView;
+import com.parabits.paranote.views.INoteElementView;
 import com.parabits.paranote.views.NoteImageView;
 import com.parabits.paranote.views.NoteTextView;
 
 public class NoteElementDescriptor {
 
-    public static String getString(INoteView view)
+    public static String getString(INoteElementView view)
     {
         switch (view.getType())
         {
@@ -22,7 +20,7 @@ public class NoteElementDescriptor {
         return null;
     }
 
-    private static String getTextElementString(INoteView view)
+    private static String getTextElementString(INoteElementView view)
     {
         NoteTextView textView = (NoteTextView) view;
         String text = textView.getText().toString();
@@ -34,7 +32,7 @@ public class NoteElementDescriptor {
         return element.toString();
     }
 
-    private static String getImageElementString(INoteView view)
+    private static String getImageElementString(INoteElementView view)
     {
         NoteImageView imageView = (NoteImageView) view;
         Uri uri = imageView.getImageUri();

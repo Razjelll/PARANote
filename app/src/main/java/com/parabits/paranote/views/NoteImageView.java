@@ -2,9 +2,8 @@ package com.parabits.paranote.views;
 
 import android.content.Context;
 import android.net.Uri;
-import android.widget.ImageView;
 
-public class NoteImageView extends android.support.v7.widget.AppCompatImageView implements INoteView {
+public class NoteImageView extends android.support.v7.widget.AppCompatImageView implements INoteElementView {
 
     private Uri m_image_uri;
 
@@ -28,4 +27,5 @@ public class NoteImageView extends android.support.v7.widget.AppCompatImageView 
     {
         return m_image_uri;
     }
+    public void setUri(Uri uri) {m_image_uri = uri;}
 }
