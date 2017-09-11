@@ -175,7 +175,7 @@ public class Date {
         return calendar.getTime();
     }
 
-    private Calendar getCalendar()
+    public Calendar getCalendar()
     {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, m_year);
@@ -206,7 +206,18 @@ public class Date {
     @Override
     public String toString()
     {
-        return getDate().toString();
+        return m_day + ":" + m_month +"." +m_year +" " + m_hour+ ":"+ m_minute;
+    }
+
+    /**
+     * Zwraca datę w formacie dd.mm.yyyy
+     * @return
+     */
+    public String getDateString() {
+        //TODO zrobić formatowanie liczb do wstawiając zero na początek
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(m_day).append(".").append(m_month).append(".").append(m_year);
+        return stringBuilder.toString();
     }
 
 

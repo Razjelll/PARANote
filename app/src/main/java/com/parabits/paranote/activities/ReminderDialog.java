@@ -108,6 +108,7 @@ public class ReminderDialog extends DialogFragment {
         } else // wypełnianie domyślnymi danymi
         {
             m_reminder = new Reminder();
+            m_reminder.setActive(true); // domyślnie nowe przypomnienie będzie aktywne
             setDefaultValues();
         }
         return view;
@@ -216,8 +217,7 @@ public class ReminderDialog extends DialogFragment {
     }
 
     private void setDate(Date date, View button) {
-        java.text.DateFormat dateFormat = DateFormat.getDateFormat(getActivity());
-        ((Button) button).setText(dateFormat.format(date.getDate()));
+         ((Button) button).setText(date.getDateString());
     }
 
     private void setButtonText(String text, View button) {

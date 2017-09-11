@@ -69,5 +69,6 @@
     <string name="empty_field">To pole nie może być puste</string>
     <string name="success_update_note">Pomyślnie zaktualizowano notatkę</string>
     <string name="failed_update_note">Aktualizacja notatki nie udała się</string>
+    <string name="title_activity_reminder">ReminderActivity</string>
 
 </resources>

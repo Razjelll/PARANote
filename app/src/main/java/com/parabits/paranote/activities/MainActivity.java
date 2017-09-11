@@ -13,6 +13,8 @@ import com.parabits.paranote.adapters.NoteAdapter;
 import com.parabits.paranote.data.database.NoteDao;
 import com.parabits.paranote.data.models.Note;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {

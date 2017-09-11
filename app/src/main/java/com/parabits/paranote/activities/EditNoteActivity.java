@@ -17,6 +17,7 @@ import com.parabits.paranote.data.database.ReminderDao;
 import com.parabits.paranote.data.models.Date;
 import com.parabits.paranote.data.models.Note;
 import com.parabits.paranote.data.models.Reminder;
+import com.parabits.paranote.services.ReminderAlarmManager;
 import com.parabits.paranote.views.NoteView;
 import com.parabits.paranote.views.ParaToolbar;
 import com.parabits.paranote.views.ToolbarMenu;
@@ -158,11 +159,14 @@ public class EditNoteActivity extends AppCompatActivity {
             }
             if (success) {
                 Toast.makeText(getApplicationContext(), getString(R.string.success_update_note), Toast.LENGTH_SHORT).show(); //udana aktualizacja
+                if(m_note.getReminder() != null)
+                {
+                    startReminderAlarm(m_note.getReminder());
+                }
             } else {
                 Toast.makeText(getApplicationContext(), getString(R.string.failed_save_note), Toast.LENGTH_SHORT).show(); // nie udana aktualziacja
             }
             return success;
-            //TODO zrobić aktualizację notatki, akutalizację lub usunięcie przypomnienia
         } else // zapisanie nowej notatki w bazie danych
         {
             m_note.setCreationDate(nowDate);
@@ -173,6 +177,7 @@ public class EditNoteActivity extends AppCompatActivity {
                 if (saveReminder(m_note.getReminder())) //zapisywanie przypomnienia. Jezeli przypomnienie nie zostało dodane nic nie jest zapisywana i zwracana jest wartość true
                 {
                     Toast.makeText(getApplicationContext(), getString(R.string.success_save_note), Toast.LENGTH_SHORT).show(); //komunikat o powodzeniu
+                    startReminderAlarm(m_note.getReminder()); // TODO to można dać w jakimś innym miejscu. Później się jeszcze zobaczy
                     return true;
                 } else {
                     //TODO zastanowić się, czy usunąć wcześniej zapisaną notatkę, czy wyświetlić komunikat o niepowodzeniu zapisu powiadomienia i zostawić notatkę
@@ -185,6 +190,11 @@ public class EditNoteActivity extends AppCompatActivity {
         return false;
     }
 
+    private void startReminderAlarm(Reminder reminder)
+    {
+        ReminderAlarmManager alarmManager = new ReminderAlarmManager();
+        alarmManager.startAlarm(reminder, getApplicationContext());
+    }
     /**
      * Zapisuje, usuwa lub aktualizuje przypomnienie w bazie danych
      *
