@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //TODO przenieść wszystko co jest związane z ładowaniem i wyświetlaniem listy do onResume, aby po poworcie z inej aktywności było zaktualizowane
         m_notes_list_view = (ListView) findViewById(R.id.list);
         List<Note> notesList = new NoteDao(this).getAll();
         m_note_adapter = new NoteAdapter(this, R.layout.item_note, notesList);
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, EditNoteActivity.class);
         if(note != null)
         {
-            intent.putExtra("note", note);
+            intent.putExtra("noteID", note.getID()); //TODO sprawdzić, czy przypadkowo gdzieś wcześniej nie pobieramy z bazy danych całej notatki
         }
         //Intent intent = new Intent(this, LabelActivity.class);
         startActivity(intent);

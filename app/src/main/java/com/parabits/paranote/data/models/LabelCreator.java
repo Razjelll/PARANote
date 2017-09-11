@@ -4,7 +4,7 @@ import android.database.Cursor;
 
 import com.parabits.paranote.data.database.tables.LabelsTable;
 
-public class LabelCreator implements ModelCreator<Label>{
+public class LabelCreator implements IModelCreator<Label> {
 
     @Override
     public Label createFromCursor(Cursor cursor) {

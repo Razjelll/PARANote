@@ -16,6 +16,7 @@ import android.support.annotation.Nullable;
 
 import com.parabits.paranote.data.database.tables.LabelsTable;
 import com.parabits.paranote.data.database.tables.NotesTable;
+import com.parabits.paranote.data.database.tables.RemindersTable;
 
 import java.util.ArrayList;
 
@@ -31,11 +32,14 @@ public class NotesProvider extends ContentProvider {
     static final String PROVIDER_NAME = "com.parabits.paranote.NotesProvider";
     static final String NOTES_URL = "content://" + PROVIDER_NAME + "/note";
     static final String LABELS_URL = "content://" + PROVIDER_NAME + "/label";
+    static final String REMINDER_URL = "content://" + PROVIDER_NAME + "/reminder";
 
     private static final int SINGLE_NOTE = 10;
     private static final int ALL_NOTES = 20;
     private static final int SINGLE_LABEL = 30;
     private static final int ALL_LABELS = 40;
+    private static final int SINGLE_REMINDER = 50;
+    private static final int ALL_REMINDERS = 60;
 
     private final String[] ALL_COLUMNS = {"*"};
 
@@ -46,6 +50,8 @@ public class NotesProvider extends ContentProvider {
         uriMatcher.addURI(PROVIDER_NAME, "note/#", SINGLE_NOTE);
         uriMatcher.addURI(PROVIDER_NAME, "label", ALL_LABELS);
         uriMatcher.addURI(PROVIDER_NAME, "label/#", SINGLE_LABEL);
+        uriMatcher.addURI(PROVIDER_NAME, "reminder", ALL_REMINDERS);
+        uriMatcher.addURI(PROVIDER_NAME, "reminder/#", SINGLE_REMINDER);
     }
 
     public DbOpenHelper openHelper;
@@ -82,6 +88,14 @@ public class NotesProvider extends ContentProvider {
                 String labelID = uri.getLastPathSegment();
                 selectionArgs = fixSelectionArgs(selectionArgs, labelID);
                 return database.query(LabelsTable.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+            case ALL_REMINDERS:
+                return database.query(RemindersTable.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+            case SINGLE_REMINDER:
+                selection = selection == null ? RemindersTable.ID + "=?" :
+                        RemindersTable.ID + "=? AND (" + selection + ")";
+                String reminderID = uri.getLastPathSegment();
+                selectionArgs = fixSelectionArgs(selectionArgs, reminderID);
+                return database.query(RemindersTable.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -138,6 +152,11 @@ public class NotesProvider extends ContentProvider {
                 if(labelID == -1) throw new SQLException("Insertion label failed");
                 resultUri = Uri.withAppendedPath(uri, String.valueOf(labelID));
                 break;
+            case ALL_REMINDERS:
+                long reminderID = database.insert(RemindersTable.TABLE_NAME, "", values);
+                if(reminderID == -1) throw  new SQLException("Insertion reminder failed");
+                resultUri = Uri.withAppendedPath(uri, String.valueOf(reminderID));
+                break;
         }
         return resultUri;
     }
@@ -187,6 +206,11 @@ public class NotesProvider extends ContentProvider {
                 selection =fixSelectionString(selection, LabelsTable.ID_COLUMN);
                 selectionArgs = fixSelectionArgs(selectionArgs, labelID);
                 count = database.delete(LabelsTable.TABLE_NAME, selection, selectionArgs); break;
+            case ALL_REMINDERS:
+                String reminderID = uri.getLastPathSegment();
+                selection = fixSelectionString(selection, RemindersTable.ID);
+                selectionArgs = fixSelectionArgs(selectionArgs, reminderID);
+                count = database.delete(RemindersTable.TABLE_NAME, selection, selectionArgs); break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -220,6 +244,13 @@ public class NotesProvider extends ContentProvider {
                 selection = fixSelectionString(selection, LabelsTable.ID_COLUMN);
                 selectionArgs = fixSelectionArgs(selectionArgs, labelID);
                 count = database.update(LabelsTable.TABLE_NAME, contentValues, selection, selectionArgs); break;
+            case ALL_REMINDERS:
+                count = database.update(RemindersTable.TABLE_NAME, contentValues, selection, selectionArgs); break;
+            case SINGLE_REMINDER:
+                String reminderID = uri.getLastPathSegment();
+                selection = fixSelectionString(selection, RemindersTable.ID);
+                selectionArgs = fixSelectionArgs(selectionArgs, reminderID);
+                count = database.update(RemindersTable.TABLE_NAME, contentValues, selection, selectionArgs); break;
             default:
                 throw new IllegalArgumentException("Unknow URI " + uri);
         }
@@ -257,6 +288,8 @@ public class NotesProvider extends ContentProvider {
                return Uri.parse(NOTES_URL);
            case LABELS:
                return Uri.parse(LABELS_URL);
+           case REMINDERS:
+               return Uri.parse(REMINDER_URL);
            default:
                throw new IllegalArgumentException("Invalid table");
        }
@@ -280,6 +313,4 @@ public class NotesProvider extends ContentProvider {
                 throw new IllegalArgumentException("Unknown table");
         }
     }
-
-
 }

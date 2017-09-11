@@ -5,7 +5,7 @@ import android.database.Cursor;
 
 import com.parabits.paranote.data.database.tables.NotesTable;
 
-public class NoteCreator implements ModelCreator<Note>{
+public class NoteCreator implements IModelCreator<Note> {
 
     public  Note createFromCursor(Cursor cursor)
     {

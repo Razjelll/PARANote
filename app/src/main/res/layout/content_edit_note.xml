@@ -14,16 +14,15 @@
         android:id="@+id/note_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_toolbar"
         android:layout_below="@+id/title_edit_text"
+        android:layout_marginBottom="@dimen/bottom_toolbar_height"
         />
 
 
     <com.parabits.paranote.views.ParaToolbar
         android:id="@+id/bottom_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_height="match_parent"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

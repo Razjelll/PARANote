@@ -5,30 +5,32 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.parabits.paranote.R;
 import com.parabits.paranote.data.database.NoteDao;
+import com.parabits.paranote.data.database.ReminderDao;
 import com.parabits.paranote.data.models.Date;
 import com.parabits.paranote.data.models.Note;
+import com.parabits.paranote.data.models.Reminder;
 import com.parabits.paranote.views.NoteView;
 import com.parabits.paranote.views.ParaToolbar;
+import com.parabits.paranote.views.ToolbarMenu;
 
 public class EditNoteActivity extends AppCompatActivity {
 
     private final int PICK_IMAGE = 9932;
 
     private EditText m_title_edit_text;
-    /*private ImageButton m_save_button;
-    private ImageButton m_add_text_button;
-    private ImageButton m_photo_button;*/
 
     private ParaToolbar m_bottom_toolbar;
 
     private NoteView m_note_view;
-
+    private Note m_note;
 
     private boolean m_edited;
 
@@ -37,53 +39,48 @@ public class EditNoteActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_note);
 
+        //TODO dla edycji ustawić
         setupToolbar();
         setupControls();
         getData();
     }
 
-    private void getData()
-    {
+    private void getData() {
         Intent intent = getIntent();
-        Note note = intent.getParcelableExtra("note");
-        if(note != null)
+        long noteID = intent.getLongExtra("noteID", -1);
+        if (noteID > 0) // notatka jest edytowana
         {
-            m_note_view.init(note.getContent());
+            // pobieramy notatkę o podanym id z bazy danych, a następnie ustawiamy widok na podstawie
+            // zawartości pola content notatki. Zostanie takze ustawiony tytuł notatki
+            NoteDao dao = new NoteDao(getApplicationContext());
+            m_note = dao.get(noteID);
+            m_note_view.init(m_note.getContent());
+            m_title_edit_text.setText(m_note.getTitle());
+            m_edited = true;
+        } else // tworzenie nowej notatki
+        {
+            m_note = new Note();
         }
     }
 
-    private void setupToolbar()
-    {
+    private void setupToolbar() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
     }
 
-    private void setupControls()
-    {
+    private void setupControls() {
         m_title_edit_text = (EditText) findViewById(R.id.title_edit_text);
-        /*m_save_button = (ImageButton)findViewById(R.id.save_button);
-        m_add_text_button = (ImageButton) findViewById(R.id.add_note_button);
-        m_photo_button = (ImageButton) findViewById(R.id.photo_button);*/
         m_bottom_toolbar = (ParaToolbar) findViewById(R.id.bottom_toolbar);
-
         m_note_view = (NoteView) findViewById(R.id.note_view);
 
-        /*m_save_button.setOnClickListener(new View.OnClickListener() {
+        ToolbarMenu menu = new ToolbarMenu();
+        menu.addItem(0, android.R.drawable.ic_input_add, getString(R.string.text), new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveNote(m_edited);
-            }
-        });
-
-        m_add_text_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //addTextElement();
                 m_note_view.addTextElement();
             }
         });
-
-        m_photo_button.setOnClickListener(new View.OnClickListener() {
+        menu.addItem(0, android.R.drawable.ic_input_add, getString(R.string.photo), new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent();
@@ -91,23 +88,9 @@ public class EditNoteActivity extends AppCompatActivity {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent, "Select pircture"), PICK_IMAGE);
             }
-        });*/
-        m_bottom_toolbar.addConstantsButton(android.R.drawable.ic_input_add, "AddText", new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                m_note_view.addTextElement();
-            }
-        }, 0);
+        });
+        m_bottom_toolbar.addContextButton(0, android.R.drawable.ic_input_add, "AddText", menu);
 
-        m_bottom_toolbar.addConstantsButton(android.R.drawable.ic_menu_camera, "AddPhoto", new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent();
-                intent.setType("image/");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select pircture"), PICK_IMAGE);
-            }
-        }, 1);
 
         m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
         m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
@@ -118,12 +101,9 @@ public class EditNoteActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        if(requestCode == PICK_IMAGE && resultCode == RESULT_OK)
-        {
-            if(data != null)
-            {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
+            if (data != null) {
                 Uri uri = data.getData();
                 //Uri uri = Uri.parse("content://media/external/images/media/107");
                 //addImageElement(uri);
@@ -132,24 +112,110 @@ public class EditNoteActivity extends AppCompatActivity {
         }
     }
 
-    private void saveNote(boolean edited)
-    {
-        Note note = new Note();
-        note.setTitle(m_title_edit_text.getText().toString());
+    /**
+     * Zapisuje utworzoną notatkę w bazie danych. Jeżeli notatka jest edytowana zostanie zaktualizowana.
+     * Jeżeli tworzona jest nowa notatka zostanie zapisana w bazie dancyh.
+     * Na początku sprawdzane jest wypełnienie wymaganych pól. Jeżeli jakieś z tych pól nie jest
+     * wypełnione zapis jest niewykonywany. W pierwszej kolejności zapisywana jest zawartość notatki.
+     * Jeżeli zapis się powiedzie i zostało ustawione przypomninie nastepuje jego zapis do bazy danych;
+     * //TODO postanowić co zrobić w przypadku niepowodzenia zapisu przypomnienia
+     *
+     * @param edited określa czy notatka była edytowana
+     *               true - notatka będzie aktualizowana w bazie danych
+     *               false - w bazie zostanie zapisana nowa notatka
+     * @return poprawność zapisu notatki w bazie danych
+     */
+    private boolean saveNote(boolean edited) {
+        if (!validate())
+            return false; // w przypadku nie wypełnienia wymaganych pól zapis do bazy nie będzie kontynuowany
+        m_note.setTitle(m_title_edit_text.getText().toString());
         String content = m_note_view.toString();
-        note.setContent(content);
-        NoteDao dao = new NoteDao(getApplicationContext());
+        m_note.setContent(content);
+        NoteDao noteDao = new NoteDao(getApplicationContext());
         Date nowDate = Date.getNow();
-        if(edited) //edytowanie notatki
+        if (edited) {
+            //TODO zrobić aktualizację notatki, akutalizację lub usunięcie przypomnienia
+        } else // zapisanie nowej notatki w bazie danych
         {
-            note.setUpdateDate(nowDate);
-            //TODO dorobićupdate
-        } else { //zapisywanie nowej notatki
-            note.setCreationDate(nowDate);
-            note.setUpdateDate(nowDate);
-            dao.add(note);
+            m_note.setCreationDate(nowDate);
+            m_note.setUpdateDate(nowDate);
+            long savedNoteID = noteDao.add(m_note);
+            if (savedNoteID > 0) {
+                // zapisywanie powiadomienia jeżeli zostało ustawione
+                if (m_note.getReminder() != null) {
+                    ReminderDao reminderDao = new ReminderDao(getApplicationContext());
+                    m_note.getReminder().setNoteID(savedNoteID);
+                    boolean saveReminderSuccess = reminderDao.add(m_note.getReminder());
+                    if (saveReminderSuccess) {
+                        Toast.makeText(getApplicationContext(), getString(R.string.success_save_note), Toast.LENGTH_SHORT).show();
+                        return true;
+                    } else {
+                        //TODO albo zrobić usunięcie wczesniej zapisanej notatki i wyświetlić błąd o niepowodzeniu, albo wyświetlić błąd o niepowodzeniu zapisywania powtórzenia i zostawić notatkę
+                        return false;
+                    }
+                }
+            } else {
+                Toast.makeText(getApplicationContext(), getString(R.string.failed_save_note), Toast.LENGTH_SHORT).show();
+                return false;
+            }
         }
+        return false;
     }
 
+    /**
+     * Sprawdza poprawność wypełnienia formularza.
+     * Warunki
+     * - tytuł notatki nie może być pusty
+     *
+     * @return poprawność notatki
+     */
+    private boolean validate() {
+        if (m_title_edit_text.getText().toString().isEmpty()) {
+            // jeżeli pole tytuł nie zostanie wypełniony wyświetlona zostanie informacja o konieczności
+            // wypełnienia tego pola.
+            m_title_edit_text.setError(getString(R.string.empty_field));
+            m_title_edit_text.requestFocus();
+            return false;
+        }
+        return true;
+    }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_note, menu);
+        return true;
+    }
+
+    private final int SAVE_BUTTON_RESOURCE = R.id.save_button;
+    private final int ADD_REMINDER_RESOURCE = R.id.add_reminder;
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+        switch (id) {
+            case SAVE_BUTTON_RESOURCE:
+                if (saveNote(m_edited)) {
+                    finish(); // jeżeli zapis się udał zamykamy obecną aktywność
+                }
+                break;
+            case ADD_REMINDER_RESOURCE:
+                ReminderDialog dialog = new ReminderDialog();
+                dialog.setCallback(new ReminderDialog.Callback() {
+                    @Override
+                    public void onDialogOk(Reminder reminder) {
+                        Toast.makeText(getApplicationContext(), "Zamknięto dialog ", Toast.LENGTH_SHORT).show();
+                        m_note.setReminder(reminder); // noteID zostanie ustawione przy zapisywaniou notatki w bazie danych
+                    }
+                });
+                ReminderDao reminderDao = new ReminderDao(getApplicationContext());
+                if (m_note.getID() > 0) {
+                    Reminder reminder = reminderDao.get(m_note.getID()); // jeżeli nie ustawiono przypomnienia reminder będzie null
+                    dialog.setReminder(reminder);
+                }
+                dialog.show(getFragmentManager(), "ReminderDialog");
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

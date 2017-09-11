@@ -33,6 +33,18 @@ public class Date {
         return new Date(year, month, day, hour, minute);
     }
 
+
+    public Date()
+    {
+        Calendar calendar = Calendar.getInstance();
+        m_year = (short)calendar.get(Calendar.YEAR);
+        m_month = (byte)calendar.get(Calendar.MONTH);
+        m_day = (byte)calendar.get(Calendar.DAY_OF_MONTH);
+        m_hour = (byte)calendar.get(Calendar.HOUR);
+        m_minute = (byte)calendar.get(Calendar.MINUTE);
+    }
+
+
     public Date(int year, int month, int day, int hour, int minute)
     {
         setYear((short)year);
@@ -53,7 +65,6 @@ public class Date {
 
     public Date(int code)
     {
-
         String codeString = String.valueOf(code);
         // jeżeli długość kodu jest mniejsza od 10 (możliwa jest tylko długość 9) dodajemy zero na początku
         if(codeString.length() != CODE_LENGTH)
@@ -74,6 +85,29 @@ public class Date {
         }
     }
 
+    public void setDay(int day)
+    {
+        setDay((byte)day);
+    }
+
+    public void addDays(int days) {
+        Calendar calendar = getCalendar();
+        calendar.add(Calendar.DAY_OF_MONTH, days);
+        setDateFromCalendar(calendar);
+    }
+
+    private void setDateFromCalendar(Calendar calendar) {
+        m_year = (short) calendar.get(Calendar.YEAR);
+        m_month = (byte) calendar.get(Calendar.MONTH);
+        m_day = (byte) calendar.get(Calendar.DAY_OF_MONTH);
+    }
+
+    public void addMonth(int months) {
+        Calendar calendar = getCalendar();
+        calendar.add(Calendar.MONTH, months);
+        setDateFromCalendar(calendar);
+    }
+
     public void setMonth(byte month)
     {
         if(month > 0 && month <= 12)
@@ -82,12 +116,22 @@ public class Date {
         }
     }
 
+    public void setMonth(int month)
+    {
+        setMonth((byte)month);
+    }
+
     public void setYear(short year)
     {
         if(year > 2010 && year < 3000)
         {
             m_year = year;
         }
+    }
+
+    public void setYear(int year)
+    {
+        setYear((short) year);
     }
 
     public void setHour(byte hour)
@@ -106,7 +150,20 @@ public class Date {
         }
     }
 
+    public void setTime(String time)
+    {
+        String[] timeParts = time.split(":");
+        m_hour = Byte.parseByte(timeParts[0]);
+        m_minute = Byte.parseByte(timeParts[1]);
+    }
+
     public java.util.Date getDate()
+    {
+        Calendar calendar = getCalendar();
+        return calendar.getTime();
+    }
+
+    private Calendar getCalendar()
     {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.YEAR, m_year);
@@ -114,9 +171,9 @@ public class Date {
         calendar.set(Calendar.DAY_OF_MONTH, m_day);
         calendar.set(Calendar.HOUR, m_hour);
         calendar.set(Calendar.MINUTE, m_minute);
-        return calendar.getTime();
-    }
 
+        return calendar;
+    }
 
     public int getCode()
     {
@@ -127,6 +184,11 @@ public class Date {
         result += m_hour * 100;
         result += m_minute;
         return result;
+    }
+
+    public long getMiliseconds()
+    {
+        return getCalendar().getTimeInMillis();
     }
 
     @Override

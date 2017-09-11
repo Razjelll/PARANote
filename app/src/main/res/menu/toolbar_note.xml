@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/add_text"
-        android:orderInCategory="100"
-        android:title="Dodaj tekst"
-        app:showAsAction="always"
-        android:icon="@mipmap/ic_launcher"/>
-    <item android:id="@+id/add_image"
+    <item android:id="@+id/add_reminder"
         android:orderInCategory="200"
-        android:title="Dodaj zdjęcie"
-        app:showAsAction="always"
+        android:title="@string/add_reminder"
+        app:showAsAction="ifRoom"
         android:icon="@mipmap/ic_launcher"/>
-
+    <item android:id="@+id/save_button"
+        android:title="@string/save"
+        app:showAsAction="ifRoom"
+        android:icon="@mipmap/ic_launcher" />
 </menu>

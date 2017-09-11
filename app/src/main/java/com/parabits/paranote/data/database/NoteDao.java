@@ -24,7 +24,7 @@ public class NoteDao {
         m_content_resolver = context.getContentResolver();
     }
 
-    public void add(Note note)
+    public long add(Note note)
     {
         //TODO tutaj zrobić jakąś klasę, która będzie tworzyłą ContentValues z modelu
         ContentValues values = new ContentValues();
@@ -33,7 +33,13 @@ public class NoteDao {
         values.put(NotesTable.CREATING_DATE_COLUMN, note.getCreationDate().getCode());
         values.put(NotesTable.UPDATE_DATE_COLUMN, note.getUpdateDate().getCode());
         Uri uri = NotesProvider.getUri(NotesProvider.Table.NOTES);
-        m_content_resolver.insert(uri,values);
+        Uri resultUri = m_content_resolver.insert(uri,values);
+        if(uri != null)
+        {
+            return Long.parseLong(resultUri.getLastPathSegment());
+        }
+        return -1;
+        //return resultUri != null;
     }
 
     public boolean delete(long id)

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.parabits.paranote.data.database.tables.LabelsTable;
 import com.parabits.paranote.data.database.tables.NoteLabelsTable;
 import com.parabits.paranote.data.database.tables.NotesTable;
+import com.parabits.paranote.data.database.tables.RemindersTable;
 
 public class DbOpenHelper extends SQLiteOpenHelper {
 
@@ -28,6 +29,7 @@ public class DbOpenHelper extends SQLiteOpenHelper {
         sqLiteDatabase.execSQL(NotesTable.getCreateStatement()); //utworzenie tabeli notatek
         sqLiteDatabase.execSQL(LabelsTable.getCreateStatement());
         sqLiteDatabase.execSQL(NoteLabelsTable.getCreateStatement());
+        sqLiteDatabase.execSQL(RemindersTable.getCreateStatement());
     }
 
     @Override
