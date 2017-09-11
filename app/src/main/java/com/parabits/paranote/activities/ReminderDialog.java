@@ -158,21 +158,30 @@ public class ReminderDialog extends DialogFragment {
         dateButtonMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem menuItem) {
-                m_reminder.setDate(Date.getNow()); // na początku ustawiamy dzisiajeszą datę
+                // zapisywanie ustawionego czasu, aby później z niego skorzystać
+                int hour = m_reminder.getDate().getHour();
+                int minute = m_reminder.getDate().getMinute();
+                Date newDate = Date.getNow();
+                newDate.setHour(hour);
+                newDate.setMinute(minute);
                 switch (menuItem.getItemId()) {
                     case TODAY_ID:
+                        m_reminder.setDate(newDate);
                         setDate(m_reminder.getDate(), m_date_button);
                         break;
                     case TOMMOROW_ID:
-                        m_reminder.getDate().addDays(1);
+                        newDate.addDays(1);
+                        m_reminder.setDate(newDate);
                         setDate(m_reminder.getDate(), m_date_button);
                         break;
                     case WEEK_ID:
-                        m_reminder.getDate().addDays(7);
+                        newDate.addDays(7);
+                        m_reminder.setDate(newDate);
                         setDate(m_reminder.getDate(), m_date_button);
                         break;
                     case MONTH_ID:
-                        m_reminder.getDate().addMonth(1);
+                        newDate.addMonth(1);
+                        m_reminder.setDate(newDate);
                         setDate(m_reminder.getDate(), m_date_button);
                         break;
                     case ANOTHER_DATE_ID:
@@ -283,6 +292,7 @@ public class ReminderDialog extends DialogFragment {
     }
 
     private void setTime(String time) {
+
         m_reminder.getDate().setTime(time);
         ((Button) m_time_button).setText(time);
     }
@@ -404,7 +414,7 @@ public class ReminderDialog extends DialogFragment {
                                 setDate(date, m_end_date_button);
                             }
                         }, selectedYear, selectedMonth, selectedDay);
-                        dialog.getDatePicker().setMinDate(m_reminder.getDate().getMiliseconds());
+                        dialog.getDatePicker().setMinDate(m_reminder.getDate().getMilliseconds());
                         dialog.show();
                         break;
                 }

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.parabits.paranote.data.database.tables.RemindersTable;
 import com.parabits.paranote.data.models.Reminder;
 import com.parabits.paranote.data.models.ReminderCreator;
 
@@ -25,9 +26,21 @@ public class ReminderDao {
         m_content_resolver = context.getContentResolver();
     }
 
-    public boolean add(Reminder reminder)
+    public boolean save(Reminder reminder)
+    {
+        ContentValues values = getContentValues(reminder);
+        Uri uri = NotesProvider.getUri(NotesProvider.Table.REMINDERS);
+        Uri resultUri = m_content_resolver.insert(uri, values);
+        return resultUri != null;
+    }
+
+    private ContentValues getContentValues(Reminder reminder)
     {
         ContentValues values = new ContentValues();
+        // zapisujemy tutaj id notaki, które jest jednoczesnie id przypomnienia
+        // zapisujemy je, ponieważ to id nie ma autoikrementacji
+        // potrzebne jest tylko w przypadku zapisu nowej notatki
+        // w przypadku aktualizacji notatki nie jest potrzebne, ale nie powinno nic zepsuć
         values.put(ID, reminder.getNoteID());
         values.put(DATE, reminder.getDate().getCode());
         values.put(ACTIVE, reminder.isActive() ? 1 : 0);
@@ -49,9 +62,8 @@ public class ReminderDao {
             values.putNull(PATTERN);
             values.putNull(END_DATE);
         }
-        Uri uri = NotesProvider.getUri(NotesProvider.Table.REMINDERS);
-        Uri resultUri = m_content_resolver.insert(uri, values);
-        return resultUri != null;
+
+        return values;
     }
 
     private String getDaysPattern(List<Integer> selectedDays)
@@ -66,6 +78,15 @@ public class ReminderDao {
             }
         }
         return stringBuilder.toString();
+    }
+
+    public boolean update(Reminder reminder)
+    {
+        final ContentValues values = getContentValues(reminder);
+        Uri uri = NotesProvider.getUri(NotesProvider.Table.REMINDERS, reminder.getNoteID());
+        int updatedRows = m_content_resolver.update(uri, values, null, null);
+        return updatedRows == 1;
+
     }
 
     public boolean delete(long noteID) // id notatki jest jednocześnie id przypomnienia, ponieważ notatka może miec tylko jedno przypomnienie

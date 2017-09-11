@@ -100,6 +100,8 @@ public class Date {
         m_year = (short) calendar.get(Calendar.YEAR);
         m_month = (byte) calendar.get(Calendar.MONTH);
         m_day = (byte) calendar.get(Calendar.DAY_OF_MONTH);
+        m_hour = (byte) calendar.get(Calendar.HOUR);
+        m_minute = (byte) calendar.get(Calendar.MINUTE);
     }
 
     public void addMonth(int months) {
@@ -142,12 +144,22 @@ public class Date {
         }
     }
 
+    public void setHour(int hour)
+    {
+        setHour((byte)hour);
+    }
+
     public void setMinute(byte minute)
     {
         if(minute >= 0 && minute < 60)
         {
             m_minute = minute;
         }
+    }
+
+    public void setMinute(int minute)
+    {
+        setMinute((byte) minute);
     }
 
     public void setTime(String time)
@@ -186,7 +198,7 @@ public class Date {
         return result;
     }
 
-    public long getMiliseconds()
+    public long getMilliseconds()
     {
         return getCalendar().getTimeInMillis();
     }

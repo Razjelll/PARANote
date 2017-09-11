@@ -30,7 +30,15 @@ public class EditNoteActivity extends AppCompatActivity {
     private ParaToolbar m_bottom_toolbar;
 
     private NoteView m_note_view;
+
     private Note m_note;
+    /**
+     * Określa, czy w momencie uruchomienia aktywności w bazie danych istnieje przypomnienie powiązane
+     * z edytowaną notatką. Zmienna pomaga w decyzji co zrobić z przypomnieniem w bazie danych
+     * podczas aktualizacji notaki. Przypomnienie może być usunięte, dodane lub zaktualizowane
+     * w zależności do wartości zmiennej i ustawionego przypomnienia dla notatki.
+     */
+    private boolean m_reminder_in_db;
 
     private boolean m_edited;
 
@@ -52,10 +60,17 @@ public class EditNoteActivity extends AppCompatActivity {
         {
             // pobieramy notatkę o podanym id z bazy danych, a następnie ustawiamy widok na podstawie
             // zawartości pola content notatki. Zostanie takze ustawiony tytuł notatki
-            NoteDao dao = new NoteDao(getApplicationContext());
-            m_note = dao.get(noteID);
+            // za bazy pobierane jest także przypomnienie
+            NoteDao noteDao = new NoteDao(getApplicationContext());
+            m_note = noteDao.get(noteID);
             m_note_view.init(m_note.getContent());
             m_title_edit_text.setText(m_note.getTitle());
+            ReminderDao reminderDao = new ReminderDao(getApplicationContext());
+            Reminder reminder = reminderDao.get(noteID);
+            if (reminder != null) {
+                m_note.setReminder(reminder);
+                m_reminder_in_db = true;
+            }
             m_edited = true;
         } else // tworzenie nowej notatki
         {
@@ -134,32 +149,60 @@ public class EditNoteActivity extends AppCompatActivity {
         NoteDao noteDao = new NoteDao(getApplicationContext());
         Date nowDate = Date.getNow();
         if (edited) {
+            m_note.setUpdateDate(nowDate);
+            //TODO podczas aktualizacji dodać sprawdzanie czy obrazek został zapisany w pamięci aplikacji i usunięcie go, obrazy z galerri zostawić
+            boolean success = noteDao.update(m_note);
+            if (success) {
+                success = saveReminder(m_note.getReminder());
+                //TODO można dodać komunikat o tym, że nie udała się tylko aktualizacja przypomnienia
+            }
+            if (success) {
+                Toast.makeText(getApplicationContext(), getString(R.string.success_update_note), Toast.LENGTH_SHORT).show(); //udana aktualizacja
+            } else {
+                Toast.makeText(getApplicationContext(), getString(R.string.failed_save_note), Toast.LENGTH_SHORT).show(); // nie udana aktualziacja
+            }
+            return success;
             //TODO zrobić aktualizację notatki, akutalizację lub usunięcie przypomnienia
         } else // zapisanie nowej notatki w bazie danych
         {
             m_note.setCreationDate(nowDate);
             m_note.setUpdateDate(nowDate);
-            long savedNoteID = noteDao.add(m_note);
-            if (savedNoteID > 0) {
-                // zapisywanie powiadomienia jeżeli zostało ustawione
-                if (m_note.getReminder() != null) {
-                    ReminderDao reminderDao = new ReminderDao(getApplicationContext());
-                    m_note.getReminder().setNoteID(savedNoteID);
-                    boolean saveReminderSuccess = reminderDao.add(m_note.getReminder());
-                    if (saveReminderSuccess) {
-                        Toast.makeText(getApplicationContext(), getString(R.string.success_save_note), Toast.LENGTH_SHORT).show();
-                        return true;
-                    } else {
-                        //TODO albo zrobić usunięcie wczesniej zapisanej notatki i wyświetlić błąd o niepowodzeniu, albo wyświetlić błąd o niepowodzeniu zapisywania powtórzenia i zostawić notatkę
-                        return false;
-                    }
+            long savedNoteID = noteDao.add(m_note); //zapisywanie notatki
+            if (savedNoteID > 0 && m_note.getReminder() != null) { // sprawdzanie czy zapis notatki się udał i czy przypomnienie zostało przypisane
+                m_note.getReminder().setNoteID(savedNoteID); // ustawienie numeru id do przypomnienie
+                if (saveReminder(m_note.getReminder())) //zapisywanie przypomnienia. Jezeli przypomnienie nie zostało dodane nic nie jest zapisywana i zwracana jest wartość true
+                {
+                    Toast.makeText(getApplicationContext(), getString(R.string.success_save_note), Toast.LENGTH_SHORT).show(); //komunikat o powodzeniu
+                    return true;
+                } else {
+                    //TODO zastanowić się, czy usunąć wcześniej zapisaną notatkę, czy wyświetlić komunikat o niepowodzeniu zapisu powiadomienia i zostawić notatkę
+                    // zostawienie notatki chyba będzie lepszym pomysłem, ponieważ nie będzie trzeba ustawiać jeszcze raz
                 }
-            } else {
-                Toast.makeText(getApplicationContext(), getString(R.string.failed_save_note), Toast.LENGTH_SHORT).show();
-                return false;
             }
         }
+        // jeżeli dojdzie do tego miejsca, oznacza to, że zapis się nie udał
+        Toast.makeText(getApplicationContext(), getString(R.string.failed_save_note), Toast.LENGTH_SHORT).show();
         return false;
+    }
+
+    /**
+     * Zapisuje, usuwa lub aktualizuje przypomnienie w bazie danych
+     *
+     * @param reminder przypomnienie, które zostanie zapisane w bazie danych
+     * @return powodzenie operacji
+     */
+    private boolean saveReminder(Reminder reminder) {
+        ReminderDao reminderDao = new ReminderDao(getApplicationContext());
+        if (m_note.getReminder() != null && !m_reminder_in_db) // dodawanie przypomnienia
+        {
+            return reminderDao.save(m_note.getReminder());
+        } else if (m_note.getReminder() != null && m_reminder_in_db) {
+            return reminderDao.update(m_note.getReminder());
+        } else if (m_note.getReminder() == null && m_reminder_in_db) {
+            return reminderDao.delete(m_note.getID());
+        }
+        // jeżeli m_reminder_in_db = false i nie ustawiono nowego przypomnienia nie robimy nic
+        return true;
     }
 
     /**
@@ -208,11 +251,7 @@ public class EditNoteActivity extends AppCompatActivity {
                         m_note.setReminder(reminder); // noteID zostanie ustawione przy zapisywaniou notatki w bazie danych
                     }
                 });
-                ReminderDao reminderDao = new ReminderDao(getApplicationContext());
-                if (m_note.getID() > 0) {
-                    Reminder reminder = reminderDao.get(m_note.getID()); // jeżeli nie ustawiono przypomnienia reminder będzie null
-                    dialog.setReminder(reminder);
-                }
+                dialog.setReminder(m_note.getReminder());
                 dialog.show(getFragmentManager(), "ReminderDialog");
                 break;
         }

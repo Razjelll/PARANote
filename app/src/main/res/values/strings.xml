@@ -40,6 +40,7 @@
     <string name="date">Data</string>
     <string name="hour">Godzina</string>
     <string name="repetition">Powtarzanie</string>
+    <string name="end_date">Data końcowa</string>
     <string name="repetition_2">Powtórzenie</string>
 
     <string name="monday_abbr">Pon</string>
@@ -66,5 +67,7 @@
     <string name="success_save_note">Pomyślnie zapisano notatkę</string>
     <string name="failed_save_note">Zapisywanie notatki nie udało się</string>
     <string name="empty_field">To pole nie może być puste</string>
+    <string name="success_update_note">Pomyślnie zaktualizowano notatkę</string>
+    <string name="failed_update_note">Aktualizacja notatki nie udała się</string>
 
 </resources>

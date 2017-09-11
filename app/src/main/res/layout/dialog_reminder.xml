@@ -2,13 +2,42 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
+   <TextView android:labelFor="@+id/date_button"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:text="@string/date"
+       android:layout_marginTop="@dimen/margin"
+       android:layout_marginLeft="@dimen/margin"/>
    <Button android:id="@+id/date_button"
        style="@style/ReminderButton"
        />
+   <TextView android:labelFor="@+id/time_button"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:text="@string/hour"
+       android:layout_marginLeft="@dimen/margin"/>
    <Button android:id="@+id/time_button"
        style="@style/ReminderButton" />
+   <TextView
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:text="@string/repetition"
+       android:textStyle="bold"
+       android:textSize="16dp"
+       android:layout_margin="@dimen/margin"/>
+   <View
+       android:layout_width="match_parent"
+       android:layout_height="1dp"
+      android:background="@color/colorBorder"
+       android:layout_marginRight="@dimen/margin"
+       android:layout_marginLeft="@dimen/margin"/>
    <Button android:id="@+id/repetition_button"
       style="@style/ReminderButton" />
+   <TextView android:labelFor="@+id/end_date_button"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:text="@string/end_date"
+       android:layout_marginLeft="@dimen/margin"/>
    <Button android:id="@+id/end_date_button"
        style="@style/ReminderButton" />
 </LinearLayout>

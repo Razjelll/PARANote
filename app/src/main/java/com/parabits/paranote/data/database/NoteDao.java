@@ -27,11 +27,7 @@ public class NoteDao {
     public long add(Note note)
     {
         //TODO tutaj zrobić jakąś klasę, która będzie tworzyłą ContentValues z modelu
-        ContentValues values = new ContentValues();
-        values.put(NotesTable.TITLE_COLUMN, note.getTitle());
-        values.put(NotesTable.CONTENT_COLUMN, note.getContent());
-        values.put(NotesTable.CREATING_DATE_COLUMN, note.getCreationDate().getCode());
-        values.put(NotesTable.UPDATE_DATE_COLUMN, note.getUpdateDate().getCode());
+        ContentValues values = getContentValues(note);
         Uri uri = NotesProvider.getUri(NotesProvider.Table.NOTES);
         Uri resultUri = m_content_resolver.insert(uri,values);
         if(uri != null)
@@ -40,6 +36,25 @@ public class NoteDao {
         }
         return -1;
         //return resultUri != null;
+    }
+
+    private ContentValues getContentValues(Note note)
+    {
+        ContentValues values = new ContentValues();
+        values.put(NotesTable.TITLE_COLUMN, note.getTitle());
+        values.put(NotesTable.CONTENT_COLUMN, note.getContent());
+        values.put(NotesTable.CREATING_DATE_COLUMN, note.getCreationDate().getCode());
+        values.put(NotesTable.UPDATE_DATE_COLUMN, note.getUpdateDate().getCode());
+
+        return values;
+    }
+
+    public boolean update(Note note)
+    {
+        ContentValues values = getContentValues(note);
+        Uri uri = NotesProvider.getUri(NotesProvider.Table.NOTES, note.getID());
+        int updatedRows = m_content_resolver.update(uri, values, null, null);
+        return updatedRows == 1;
     }
 
     public boolean delete(long id)
