@@ -22,6 +22,7 @@ public class ReminderBroadcastReceiver extends BroadcastReceiver{
         activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(activityIntent);
 
+        //TODO zobaczyć czy przejdzie tutaj
         // uruchomienie kolejnego powtórzenia
         long reminderID = intent.getLongExtra("id", -1);
         ReminderDao reminderDao = new ReminderDao(context);

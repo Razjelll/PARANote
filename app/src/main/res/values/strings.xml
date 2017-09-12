@@ -36,6 +36,7 @@
     <string name="without_end_date">Bez daty zakończenia</string>
     <string name="set_date">Ustaw datę</string>
     <string name="not_set">Nie ustawiono</string>
+    <string name="add_element">Dodaj element</string>
 
     <string name="date">Data</string>
     <string name="hour">Godzina</string>

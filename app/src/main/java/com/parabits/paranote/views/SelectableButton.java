@@ -33,7 +33,7 @@ public class SelectableButton extends android.support.v7.widget.AppCompatButton
     {
 //        this.setOnClickListener(new OnClickListener() {
 //            @Override
-//            public void onClick(View view) {
+//            public void onChange(View view) {
 //                click();
 //            }
 //        });

@@ -9,11 +9,24 @@ public class NoteImageView extends android.support.v7.widget.AppCompatImageView 
 
     public NoteImageView(Context context) {
         super(context);
+        setFocusable(true);
     }
 
     @Override
     public Type getType() {
         return Type.IMAGE;
+    }
+
+    @Override
+    public int getId()
+    {
+        return super.getId();
+    }
+
+    @Override
+    public void setId(int id)
+    {
+        super.setId(id);
     }
 
     @Override

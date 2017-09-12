@@ -236,6 +236,20 @@ public class ParaToolbar extends LinearLayout{
         m_context_buttons.addView(toolbarMenu);
     }
 
+    public void setContextAction(ToolbarMenu menu)
+    {
+        m_context_buttons.removeAllViews();
+        ToolbarButton toolbarButton;
+        ToolbarMenuItem item;
+        for(int i=0; i<menu.getItems().size(); i++)
+        {
+            item = menu.getItems().get(i);
+            toolbarButton = getImageButton(item.getResource(), item.getText(), item.getListener());
+            m_context_buttons.addView(toolbarButton);
+        }
+        this.requestLayout();
+    }
+
     public void clearContextLayout()
     {
         m_context_buttons.removeAllViews();

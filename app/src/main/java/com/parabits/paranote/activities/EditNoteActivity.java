@@ -18,6 +18,8 @@ import com.parabits.paranote.data.models.Date;
 import com.parabits.paranote.data.models.Note;
 import com.parabits.paranote.data.models.Reminder;
 import com.parabits.paranote.services.ReminderAlarmManager;
+import com.parabits.paranote.views.INoteElementView;
+import com.parabits.paranote.views.NoteListView;
 import com.parabits.paranote.views.NoteView;
 import com.parabits.paranote.views.ParaToolbar;
 import com.parabits.paranote.views.ToolbarMenu;
@@ -43,10 +45,14 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private boolean m_edited;
 
+    private ToolbarMenu[] toolbarMenus;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_note);
+
+        toolbarMenus = new ToolbarMenu[3]; //TODO tutaj zmienic to
 
         //TODO dla edycji ustawić
         setupToolbar();
@@ -84,10 +90,66 @@ public class EditNoteActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
     }
 
+    private final int TEXT_CONTEXT_MENU = 0;
+    private final int IMAGE_CONTEXT_MENU = 1;
+    private final int LIST_CONTEXT_MENU =2;
+
     private void setupControls() {
+
         m_title_edit_text = (EditText) findViewById(R.id.title_edit_text);
         m_bottom_toolbar = (ParaToolbar) findViewById(R.id.bottom_toolbar);
         m_note_view = (NoteView) findViewById(R.id.note_view);
+
+        // todo zrobić to za pomocą przekazania listenera
+        /*m_note_view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onChange(View view) {
+                int id = view.getId();
+                m_note_view.selectView(id);
+                INoteElementView.Type type = m_note_view.getTypeSelectedView();
+                switch (type)
+                {
+                    case TEXT:
+                        m_bottom_toolbar.setContextAction(toolbarMenus[TEXT_CONTEXT_MENU]);
+                        Toast.makeText(getApplicationContext(), "Zaznaczono tekst", Toast.LENGTH_SHORT).show();
+                        break;
+                    case IMAGE:
+                        m_bottom_toolbar.setContextAction(toolbarMenus[IMAGE_CONTEXT_MENU]);
+                        Toast.makeText(getApplicationContext(), "Zaznaczono obrazek", Toast.LENGTH_SHORT).show();
+                        break;
+                    case LIST:
+                        m_bottom_toolbar.setContextAction(toolbarMenus[LIST_CONTEXT_MENU]);
+                        Toast.makeText(getApplicationContext(), "Zaznaczono listę", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        });*/
+
+        m_note_view.setOnNoteViewClickListener(new NoteView.OnNoteElementChangeListener() {
+            @Override
+            public void onChange(INoteElementView.Type from, INoteElementView.Type to) {
+                if(from == to) //jeżeli zmieniono na taki sam typ nie robimy nic
+                {
+                    return;
+                }
+                // w przeciwnym wypadku ustawiamy menu kontekstowe na wybrany element
+                switch (to)
+                {
+                    case TEXT:
+                        m_bottom_toolbar.setContextAction(toolbarMenus[TEXT_CONTEXT_MENU]);
+                        Toast.makeText(getApplicationContext(), "Zaznaczono tekst", Toast.LENGTH_SHORT).show();
+                        break;
+                    case IMAGE:
+                        m_bottom_toolbar.setContextAction(toolbarMenus[IMAGE_CONTEXT_MENU]);
+                        Toast.makeText(getApplicationContext(), "Zaznaczono obrazek", Toast.LENGTH_SHORT).show();
+                        break;
+                    case LIST:
+                        m_bottom_toolbar.setContextAction(toolbarMenus[LIST_CONTEXT_MENU]);
+                        Toast.makeText(getApplicationContext(), "Zaznaczono listę", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        });
 
         ToolbarMenu menu = new ToolbarMenu();
         menu.addItem(0, android.R.drawable.ic_input_add, getString(R.string.text), new View.OnClickListener() {
@@ -105,15 +167,56 @@ public class EditNoteActivity extends AppCompatActivity {
                 startActivityForResult(Intent.createChooser(intent, "Select pircture"), PICK_IMAGE);
             }
         });
-        m_bottom_toolbar.addContextButton(0, android.R.drawable.ic_input_add, "AddText", menu);
+        menu.addItem(0, android.R.drawable.ic_input_add, "Lista", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                m_note_view.addListElement();
+            }
+        });
+        m_bottom_toolbar.addConstantsButton(0, android.R.drawable.ic_input_add, "AddText", menu);
+
+        //TODO na razie menu kontekstowe dla elementu i dla przyciksu korzystają z ToolbarMenu
 
 
-        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
-        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
-        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
-        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
-        m_bottom_toolbar.addContextButton(android.R.drawable.ic_menu_report_image, "dada", null);
+        ToolbarMenu textContextMenu = new ToolbarMenu();
+        textContextMenu.addItem(0, android.R.drawable.ic_menu_report_image, "Usuń", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //TODO dodać usuwanie widoku. Dodać zmienną selected view. Dodatkowo wyświetlić komunikat, czy na pewno usunąć widok
+                Toast.makeText(getApplicationContext(), "Prawie usunięto textView", Toast.LENGTH_SHORT).show();
+            }
+        });
 
+        ToolbarMenu imageContextMenu = new ToolbarMenu();
+
+        ToolbarMenu listContextMenu = new ToolbarMenu();
+        listContextMenu.addItem(0, android.R.drawable.ic_menu_report_image, "Dodaj element", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "Teraz powinien zostać dodany element do listy", Toast.LENGTH_SHORT).show();
+                ((NoteListView)m_note_view.getSelectedView()).addItem();
+            }
+        });
+        listContextMenu.addItem(0, android.R.drawable.ic_input_add, "Zaznacz element", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "Teraz element powinien się zaznaczyć", Toast.LENGTH_SHORT).show();
+                //TODO dorobić zaznaczanie
+            }
+        });
+        listContextMenu.addItem(0, android.R.drawable.ic_input_add, "usuń element", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "Teraz element powinien być usunięty", Toast.LENGTH_SHORT).show();
+                ((NoteListView)m_note_view.getSelectedView()).removeSelectedItem();
+            }
+        });
+
+        toolbarMenus[TEXT_CONTEXT_MENU] = textContextMenu;
+        toolbarMenus[IMAGE_CONTEXT_MENU] = imageContextMenu;
+        toolbarMenus[LIST_CONTEXT_MENU] = listContextMenu;
+
+        m_bottom_toolbar.setContextAction(toolbarMenus[LIST_CONTEXT_MENU]);
     }
 
     @Override

@@ -9,8 +9,11 @@ public interface INoteElementView {
     enum Type
     {
         TEXT,
-        IMAGE
+        IMAGE,
+        LIST
     }
 
     Type getType();
+    int getId();
+    void setId(int id);
 }
