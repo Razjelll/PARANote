@@ -21,7 +21,8 @@
         <activity
             android:name=".activities.EditNoteActivity"
             android:label="@string/title_activity_edit_note"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:theme="@style/AppTheme.NoActionBar"
+            />
 
         <provider
             android:name=".data.database.NotesProvider"

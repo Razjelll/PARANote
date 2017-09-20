@@ -1,7 +1,6 @@
 package com.parabits.paranote.views;
 
 import android.content.Context;
-import android.os.SystemClock;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
@@ -10,10 +9,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
@@ -23,6 +21,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NoteListView extends ListView implements INoteElementView {
+
+    public class NoteListItem
+    {
+        private boolean m_selected;
+        private String m_text;
+
+        NoteListItem(boolean selected, String text)
+        {
+            m_selected = selected;
+            m_text = text;
+        }
+
+        public boolean isSelected(){
+            return m_selected;}
+        public String getText(){return m_text;}
+
+        public void setSelected(boolean selected){m_selected =selected;}
+        public void setText(String text){m_text = text;}
+    }
 
     //private ListView m_list_view;
     //private Button m_add_element_button;
@@ -45,52 +62,49 @@ public class NoteListView extends ListView implements INoteElementView {
         init();
     }
 
+    public NoteListItem getItem(int position)
+    {
+
+        return m_adapter.getItem(position);
+    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event)
     {
-        if(!hasFocus()) requestFocus();
-        //performItemClick(this, 0, 0);
+
+        //if(!hasFocus()) requestFocus();
+        performItemClick(this, 0, 0);
         return false;
     }
 
     private void init()
     {
-        /*setOrientation(VERTICAL);
-        setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));*/
-
-
-        /*m_list_view = new ListView(getContext());
-        LayoutParams layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        m_list_view.setLayoutParams(layoutParams);
-        m_adapter = new NoteListAdapter(getContext(), R.layout.item_list_element, new ArrayList<ListElement>());
-        m_list_view.setAdapter(m_adapter);*/
-
-        List<ListElement> items = new ArrayList<>();
-        items.add(new ListElement(false, ""));
+        List<NoteListItem> items = new ArrayList<>();
+        //items.add(new NoteListItem(false, ""));
         m_adapter = new NoteListAdapter(getContext(), R.layout.item_list_element, items);
         setAdapter(m_adapter);
-
-        /*m_add_element_button = new Button(getContext());
-        m_add_element_button.setText(getResources().getString(R.string.add_element));
-        m_add_element_button.setOnClickListener(new OnClickListener() {
+        addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
             @Override
-            public void onChange(View view) {
-                m_adapter.addItem();
+            public void onViewAttachedToWindow(View view) {
+                setListViewHeightBasedChildren();
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+
             }
         });
-
-        this.addView(m_list_view);
-        this.addView(m_add_element_button);*/
     }
 
-    /*@Override
-    public boolean onInterceptTouchEvent(MotionEvent event)
+    public int getItemsCount()
     {
-        return true;
-    }*/
+        return m_adapter.getCount();
+    }
 
-    private void setListViewHeightBasedChildred()
+
+    private void setListViewHeightBasedChildren()
     {
+        // TODO nie wykonywać tego jeżeli nie dołączono jescze widoku
         ListAdapter adapter = getAdapter();
         if(adapter == null)
         {
@@ -106,9 +120,17 @@ public class NoteListView extends ListView implements INoteElementView {
         }
 
         ViewGroup.LayoutParams params = getLayoutParams();
-        params.height = totalHeight + (getDividerHeight() * (adapter.getCount() -1));
-        setLayoutParams(params);
-        requestLayout();
+        // sprawdzamy czy widok ma parametry
+        // jeżeli widok nie jest dołączony do inego widoku params będzie null. Taka sytuacja następuje
+        // w przypadku ustawiania widoku z bazy danych. Najpierw ustawiany jest widok i dołączane są
+        // wszystkie elementy, a następnie dołączany jest widok
+        if(params != null)
+        {
+            params.height = totalHeight + (getDividerHeight() * (adapter.getCount() -1));
+            setLayoutParams(params);
+            requestLayout();
+        }
+
     }
 
     @Override
@@ -149,10 +171,10 @@ public class NoteListView extends ListView implements INoteElementView {
     {
 
         private Context m_context;
-        private List<ListElement> m_items;
+        private List<NoteListItem> m_items;
         private int m_resource;
 
-        public NoteListAdapter(@NonNull Context context, @LayoutRes int resource, List<ListElement> data) {
+        public NoteListAdapter(@NonNull Context context, @LayoutRes int resource, List<NoteListItem> data) {
             super(context, resource, data);
             m_context = context;
             m_items = data;
@@ -178,28 +200,29 @@ public class NoteListView extends ListView implements INoteElementView {
                         }
                     }
                 });
-                viewHolder.setOnClickListener(new OnClickListener() {
+                viewHolder.setOnClickListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
-                    public void onClick(View view) {
-                        //TODO pomyśleć czy można zrobić to jakoś inaczej
-                        m_items.get(position).setSelected(viewHolder.isSelected());
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                        m_items.get(position).setSelected(b);
                     }
                 });
                 rowView.setTag(viewHolder);
+                rowView.setFocusable(false);
+
             }
             else
             {
                 viewHolder = (ViewHolder) rowView.getTag();
             }
 
-            ListElement element = m_items.get(position);
-            viewHolder.setSelected(element.isSelected());
+            NoteListItem element = m_items.get(position);
+            viewHolder.setChecked(element.isSelected());
             viewHolder.setText(element.getText());
 
             return rowView;
         }
 
-        public void setSelected(boolean selected, int position)
+        public void setChecked(boolean selected, int position)
         {
             m_items.get(position).setSelected(selected);
             notifyDataSetChanged();
@@ -212,7 +235,7 @@ public class NoteListView extends ListView implements INoteElementView {
         }
 
         @Override
-        public ListElement getItem(int position)
+        public NoteListItem getItem(int position)
         {
             return m_items.get(position);
         }
@@ -224,16 +247,16 @@ public class NoteListView extends ListView implements INoteElementView {
 
         public void addItem(boolean selected, String text)
         {
-            m_items.add(new ListElement(selected, text));
+            m_items.add(new NoteListItem(selected, text));
             notifyDataSetChanged();
-            setListViewHeightBasedChildred();
+            setListViewHeightBasedChildren();
         }
 
         public void removeItem(int position)
         {
             m_items.remove(position);
             notifyDataSetChanged();
-            setListViewHeightBasedChildred();
+            setListViewHeightBasedChildren();
         }
 
         private class ViewHolder
@@ -245,16 +268,17 @@ public class NoteListView extends ListView implements INoteElementView {
             {
                 m_check_box = view.findViewById(R.id.check_box);
                 m_edit_text = view.findViewById(R.id.content_text_view);
-
+                m_edit_text.setFocusable(true);
+                m_edit_text.setFocusableInTouchMode(true);
             }
 
-            public void setSelected(boolean selected)
+            public void setChecked(boolean selected)
             {
-                m_check_box.setSelected(selected);
+                m_check_box.setChecked(selected);
             }
 
-            boolean isSelected() {
-                return m_check_box.isSelected();
+            boolean isChecked() {
+                return m_check_box.isChecked();
             }
 
             public void setText(String text)
@@ -270,29 +294,11 @@ public class NoteListView extends ListView implements INoteElementView {
                 m_edit_text.setOnFocusChangeListener(listener);
             }
 
-            void setOnClickListener(OnClickListener listener)
+            void setOnClickListener(CompoundButton.OnCheckedChangeListener listener)
             {
-                m_check_box.setOnClickListener(listener);
+                m_check_box.setOnCheckedChangeListener(listener);
             }
+
         }
     }
-
-    private class ListElement
-    {
-        private boolean m_selected;
-        private String m_text;
-
-        ListElement(boolean selected, String text)
-        {
-            m_selected = selected;
-            m_text = text;
-        }
-
-        public boolean isSelected(){return m_selected;}
-        public String getText(){return m_text;}
-
-        public void setSelected(boolean selected){m_selected =selected;}
-        public void setText(String text){m_text = text;}
-    }
-
 }

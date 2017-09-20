@@ -3,7 +3,6 @@ package com.parabits.paranote.data.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class NoteParser {
 
@@ -23,7 +22,6 @@ public class NoteParser {
         String content;
         while(index < noteLength)
         {
-
             openMarkerIndex = note.indexOf(NoteElement.MARKER_START, index);
             startContentIndex = note.indexOf(NoteElement.CONTENT_START, openMarkerIndex);
             endContentIndex = note.indexOf(NoteElement.CONTENT_END, startContentIndex);
@@ -51,6 +49,10 @@ public class NoteParser {
                     parameters = note.substring(openMarkerIndex + NoteElement.PHOTO_MARKER.length() + 1, startContentIndex);
                     element = parseImageElement(parameters, content);
                     break;
+                case NoteElement.LIST_MARKER:
+                    parameters = note.substring(openMarkerIndex + NoteElement.LIST_MARKER.length() + 1, startContentIndex);
+                    element = parseListElement(parameters, content);
+                    break;
                     //TODO w przeciwnym przypadku można wyżuciś jakiś błąd
             }
             if(element != null)
@@ -74,7 +76,15 @@ public class NoteParser {
     private static NoteElement parseImageElement(String parameters, String content)
     {
         //TODO dorobić parsowanie parametrów
-        PhotoElement element = new PhotoElement();
+        ImageElement element = new ImageElement();
+        element.setContent(content);
+        return element;
+    }
+
+    private static ListElement parseListElement(String parameters, String content)
+    {
+        //TODO dorobić parsowanie parametrów
+        ListElement element = new ListElement();
         element.setContent(content);
         return element;
     }

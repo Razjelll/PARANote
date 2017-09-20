@@ -1,6 +1,7 @@
 package com.parabits.paranote.views;
 
 import android.content.Context;
+import android.view.MotionEvent;
 
 
 public class NoteTextView extends android.support.v7.widget.AppCompatEditText implements INoteElementView {
@@ -25,4 +26,5 @@ public class NoteTextView extends android.support.v7.widget.AppCompatEditText im
     {
         super.setId(id);
     }
+
 }

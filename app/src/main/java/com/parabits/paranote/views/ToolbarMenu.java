@@ -55,3 +55,21 @@ public class ToolbarMenu
     }
 
 }
+
+class ToolbarMenuItem
+{
+    private int m_image_resource;
+    private String m_text;
+    private View.OnClickListener m_listener;
+
+    public ToolbarMenuItem(int resource, String text, View.OnClickListener listener)
+    {
+        m_image_resource = resource;
+        m_text = text;
+        m_listener = listener;
+    }
+
+    public int getResource() {return m_image_resource;}
+    public String getText() {return m_text;}
+    public View.OnClickListener getListener() {return m_listener;}
+}

@@ -16,6 +16,7 @@ public class NoteElementDescriptor {
                 return getTextElementString(view);
             case IMAGE:
                 return getImageElementString(view);
+
         }
         return null;
     }
@@ -37,11 +38,15 @@ public class NoteElementDescriptor {
         NoteImageView imageView = (NoteImageView) view;
         Uri uri = imageView.getImageUri();
 
-        PhotoElement element = new PhotoElement();
+        ImageElement element = new ImageElement();
         //element.setContent(uri.toString());
         element.setContent(uri.toString());
         //TODO ustawienie parametrów
 
         return element.toString();
     }
+
+
+
+
 }

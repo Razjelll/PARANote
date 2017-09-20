@@ -8,14 +8,20 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
+import com.parabits.paranote.R;
+import com.parabits.paranote.data.parser.ImageElement;
+import com.parabits.paranote.data.parser.ListElement;
 import com.parabits.paranote.data.parser.NoteElement;
 import com.parabits.paranote.data.parser.NoteElementDescriptor;
 import com.parabits.paranote.data.parser.NoteParser;
 import com.parabits.paranote.data.parser.NoteViewCreator;
-import com.parabits.paranote.data.parser.PhotoElement;
 import com.parabits.paranote.data.parser.TextElement;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,16 +57,22 @@ public class NoteView extends ScrollView {
         m_listener = listener;
     }
 
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event)
+    {
+        return false;
+    }
+
     //TODO może być konieczne dodanie listy widoków
 
     public NoteView(Context context) {
-        super(context);
+        super(context, null, R.style.NoteEditText);
         init(context);
     }
 
     public NoteView(Context context, AttributeSet attrs)
     {
-        super(context, attrs);
+        super(context, attrs, R.style.NoteEditText);
         init(context);
         //TOOD zadeklarować nowe atrybuty
     }
@@ -84,6 +96,8 @@ public class NoteView extends ScrollView {
 
         this.setClickable(true);
         this.setFocusable(true);
+
+        m_selected_view_position = -1; // początkowo żadna pozycja nie jest zaznaczona
     }
 
     public void init(String note)
@@ -92,7 +106,10 @@ public class NoteView extends ScrollView {
         INoteElementView view;
         for(NoteElement element : m_note_elements)
         {
-            view = NoteViewCreator.create(element, getContext());
+            /*view = NoteViewCreator.create(element, getContext());
+            m_note_container.addView((View)view);
+            m_note_views.add(view);*/
+            view = element.getCreator().createView(getContext());
             m_note_container.addView((View)view);
             m_note_views.add(view);
             //TODO tutaj jeszcze prawdopodobnie będzie trzeba dodac wioki do tablicy, zeby później je usunąć
@@ -139,6 +156,7 @@ public class NoteView extends ScrollView {
         view.setId(m_elements_id);
         m_elements_id++;
         setListener(view);
+        ((View)view).setFocusable(false);
         m_note_container.addView((View)view);
         m_note_elements.add(element);
         m_note_views.add(view);
@@ -147,8 +165,8 @@ public class NoteView extends ScrollView {
 
     public void addImageElement(Uri uri)
     {
-        NoteElement element = new PhotoElement(uri.toString());
-        //NoteElement element = new PhotoElement(UriUtils.getImagePath(uri, getContext()));
+        NoteElement element = new ImageElement(uri.toString());
+        //NoteElement element = new ImageElement(UriUtils.getImagePath(uri, getContext()));
         INoteElementView view = NoteViewCreator.create(element, getContext());
         view.setId(m_elements_id);
         m_elements_id++;
@@ -164,61 +182,41 @@ public class NoteView extends ScrollView {
         view.setId(m_elements_id);
         m_elements_id++;
         setListener(view);
+        view.addItem(); // dodajemy pusty element
         m_note_container.addView(view);
         m_note_views.add(view);
-        setListener(view);
 
     }
 
     private void setListener(INoteElementView view)
     {
-        /*((View) view).setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                int id = view.getId();
-                selectView(id);
-                INoteElementView.Type type = getTypeSelectedView();
-                switch (type) {
-                    case TEXT:
-                        Log.d("Listener", "Text");
-                        break;
-                    case IMAGE:
-                        Log.d("Listener", "Image");
-                        break;
-                    case LIST:
-                        Log.d("Listener", "List");
-                        break;
-                }
-
-                return view.onTouchEvent(motionEvent);
-            }
-        });*/
-
-        /*if(view.getType() == INoteElementView.Type.TEXT)
-        {
-            ((View)view).setOnFocusChangeListener(new OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View view, boolean b) {
-                    if(b)
-                    {
-                        onNoteClick(view);
-                    }
-                }
-            });
-        }*/
+        View elementView = (View)view;
+        // kliknięcie na tekst - zaznaczenie elementu
         if(view.getType() == INoteElementView.Type.TEXT)
         {
-            ((View)view).setOnTouchListener(new OnTouchListener() {
+            elementView.setOnClickListener(new OnClickListener() {
                 @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if(motionEvent.getAction() == MotionEvent.ACTION_DOWN)
-                    {
-                        Log.d("Listener", "Text");
-                        onNoteClick(view);
-                    }
-                    return view.onTouchEvent(motionEvent);
+                public void onClick(View view) {
+                    //TODO można tutaj dodać sprawdzenie, czy widok jest zaznaczony, jeżeli tak nie robimy nic
+                    view.setFocusable(true);
+                    view.setFocusableInTouchMode(true);
+                    view.requestFocus();
+                    onNoteClick(view);
+                    Toast.makeText(getContext(), "Klik na text", Toast.LENGTH_SHORT).show();
                 }
             });
+//            elementView.setOnTouchListener(new OnTouchListener() {
+//                @Override
+//                public boolean onTouch(View view, MotionEvent motionEvent) {
+//                    if(motionEvent.getAction() == MotionEvent.ACTION_DOWN)
+//                    {
+//                        onNoteClick(view);
+//                    }
+//                    return view.onTouchEvent(motionEvent);
+//                }
+//            });
+
+
         }
         if(view.getType() == INoteElementView.Type.IMAGE)
         {
@@ -231,35 +229,7 @@ public class NoteView extends ScrollView {
         }
         if(view.getType() == INoteElementView.Type.LIST)
         {
-
-            /*((NoteListView)view).setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Log.d("Listener", "List Item Click");
-                    onNoteClick(view);
-                }
-            });*/
-            /*((View)view).setOnTouchListener(new OnTouchListener() {
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if(motionEvent.getAction() == MotionEvent.ACTION_DOWN)
-                    {
-                        Log.d("Listener", "List touch");
-                        onNoteClick(view);
-                    }
-                    return true;
-
-                }
-            });*/
-            /*((View)view).setOnTouchListener(new OnTouchListener() {
-                @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
-                    Log.d("Listener", "List focus");
-                    onNoteClick(view);
-                    return view.onTouchEvent(motionEvent);
-                }
-            });*/
-            ((View)view).setOnFocusChangeListener(new OnFocusChangeListener() {
+            /*((View)view).setOnFocusChangeListener(new OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View view, boolean b) {
                     if(b)
@@ -268,13 +238,36 @@ public class NoteView extends ScrollView {
                         onNoteClick(view);
                     }
                 }
+            });*/
+            ((NoteListView)elementView).setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    onNoteClick(view);
+                    Log.d("NoteList", "List item click");
+                }
             });
         }
+
     }
 
     private void onNoteClick(View view)
     {
-        INoteElementView.Type oldType = m_note_views.get(m_selected_view_position).getType();
+
+        INoteElementView.Type oldType;
+        if(m_selected_view_position >=0)
+        {
+            oldType = m_note_views.get(m_selected_view_position).getType();
+            // usunięcie focusu z edittextu. Potrzebne jest to podczas klikania na obrazek, który nie odbiera focusu pozostałym
+            // elementom, dlatego focus z edittextów nie znika i ponowne kliknięcie na edittext nie działa
+            //((View)m_note_views.get(m_selected_view_position)).clearFocus();
+            //view.setFocusable(false);
+            View oldView = (View)m_note_views.get(m_selected_view_position);
+            oldView.setFocusable(false);
+            oldView.setFocusableInTouchMode(false);
+
+        } else {
+            oldType = INoteElementView.Type.NONE;
+        }
         int id = view.getId();
         selectView(id); //TODO zmienić na getViewPosition(int id)
 
@@ -293,7 +286,22 @@ public class NoteView extends ScrollView {
         String elementString;
         for(int i =0; i<m_note_container.getChildCount(); i++)
         {
-            elementString = NoteElementDescriptor.getString((INoteElementView)m_note_container.getChildAt(i));
+            INoteElementView view = (INoteElementView)m_note_container.getChildAt(i);
+            switch (view.getType())
+            {
+                case TEXT:
+                    elementString = TextElement.Descriptor.getDescription(view);
+                    break;
+                case IMAGE:
+                    elementString = ImageElement.Descriptor.getDescription(view);
+                    break;
+                case LIST:
+                    elementString = ListElement.Descriptor.getDescription(view);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown element type ");
+            }
+            //elementString = NoteElementDescriptor.getString((INoteElementView)m_note_container.getChildAt(i));
             stringBuilder.append(elementString);
         }
         return stringBuilder.toString();

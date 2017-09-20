@@ -8,6 +8,7 @@ public interface INoteElementView {
 
     enum Type
     {
+        NONE,
         TEXT,
         IMAGE,
         LIST

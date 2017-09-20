@@ -35,6 +35,7 @@ public class EditNoteActivity extends AppCompatActivity {
     private NoteView m_note_view;
 
     private Note m_note;
+
     /**
      * Określa, czy w momencie uruchomienia aktywności w bazie danych istnieje przypomnienie powiązane
      * z edytowaną notatką. Zmienna pomaga w decyzji co zrobić z przypomnieniem w bazie danych
@@ -47,6 +48,16 @@ public class EditNoteActivity extends AppCompatActivity {
 
     private ToolbarMenu[] toolbarMenus;
 
+    /** Określa, czy orientacja ekranu uległa zmianie. po obróceniu ekranu widok zostaje zniszczony,
+     * dlatego użytkownik traci wszystkie niezapisane dane. Aby wyświetlić zwartość aktywności po
+     * obrocie ekranu zapisujemy ją, a następnie podczas ładowania aktywności o odwrotnej orientacji
+     * widok zostaje odtworzony na podstawie zapisanych danych. Podczas ładowania aktywności, jest sprawdzana
+     * wartość tej zmiennej, jeżeli
+     * true - ładowanie i odtwarzanie wcześniej pobranej aktywności
+     * fale - ładownie aktywności w standardowy sposób, czyli z bazy danych lub stworzenie pustej aktywności
+     */
+    private boolean m_orientation_changed;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,7 +68,38 @@ public class EditNoteActivity extends AppCompatActivity {
         //TODO dla edycji ustawić
         setupToolbar();
         setupControls();
-        getData();
+        if(savedInstanceState != null) //odtwarzanie aktywności po obrocie ekranu
+        {
+            restoreViewFromBundle(savedInstanceState);
+        } else { // otwieranie notej aktywności i próba pobrania danych z bazy danych
+            getData();
+        }
+
+    }
+
+    /** Odtwarza stan z przed obrotu ekranu. Metoda zapisuje obiekt Note, który zawiera zawartość notatki,
+     * //TODO dorobić tutaj jescze zaznaczone pole i inne potrzebne elementy, które powinny zostać zapisane
+     * @param savedInstanceState  stan aktywności, który został zapisany przed obortem ekranu. Zawiera informacje
+     *                            o notatce
+     */
+    private void restoreViewFromBundle(Bundle savedInstanceState)
+    {
+        m_note = savedInstanceState.getParcelable("note");
+        m_note_view.init(m_note.getContent());
+        m_title_edit_text.setText(m_note.getTitle());
+        m_orientation_changed =false;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        //TODO zrobić zapisywanie
+//        String viewContent = m_note.getContent();
+//        outState.putString("content", viewContent);
+        m_note.setContent(m_note_view.toString()); //TODO przerobić toString na jakiś Descriptor, który będzie posiadał zasady zapisywania notatki
+        outState.putParcelable("note", m_note);
+        m_orientation_changed = true;
     }
 
     private void getData() {
@@ -70,7 +112,7 @@ public class EditNoteActivity extends AppCompatActivity {
             // za bazy pobierane jest także przypomnienie
             NoteDao noteDao = new NoteDao(getApplicationContext());
             m_note = noteDao.get(noteID);
-            m_note_view.init(m_note.getContent());
+            m_note_view.init(m_note.getContent()); // tworzenie widoków na podstawie zawartości notatki
             m_title_edit_text.setText(m_note.getTitle());
             ReminderDao reminderDao = new ReminderDao(getApplicationContext());
             Reminder reminder = reminderDao.get(noteID);
@@ -100,30 +142,12 @@ public class EditNoteActivity extends AppCompatActivity {
         m_bottom_toolbar = (ParaToolbar) findViewById(R.id.bottom_toolbar);
         m_note_view = (NoteView) findViewById(R.id.note_view);
 
-        // todo zrobić to za pomocą przekazania listenera
-        /*m_note_view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onChange(View view) {
-                int id = view.getId();
-                m_note_view.selectView(id);
-                INoteElementView.Type type = m_note_view.getTypeSelectedView();
-                switch (type)
-                {
-                    case TEXT:
-                        m_bottom_toolbar.setContextAction(toolbarMenus[TEXT_CONTEXT_MENU]);
-                        Toast.makeText(getApplicationContext(), "Zaznaczono tekst", Toast.LENGTH_SHORT).show();
-                        break;
-                    case IMAGE:
-                        m_bottom_toolbar.setContextAction(toolbarMenus[IMAGE_CONTEXT_MENU]);
-                        Toast.makeText(getApplicationContext(), "Zaznaczono obrazek", Toast.LENGTH_SHORT).show();
-                        break;
-                    case LIST:
-                        m_bottom_toolbar.setContextAction(toolbarMenus[LIST_CONTEXT_MENU]);
-                        Toast.makeText(getApplicationContext(), "Zaznaczono listę", Toast.LENGTH_SHORT).show();
-                        break;
-                }
-            }
-        });*/
+//        m_title_edit_text.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                m_title_edit_text.requestFocus();
+//            }
+//        });
 
         m_note_view.setOnNoteViewClickListener(new NoteView.OnNoteElementChangeListener() {
             @Override
@@ -135,6 +159,9 @@ public class EditNoteActivity extends AppCompatActivity {
                 // w przeciwnym wypadku ustawiamy menu kontekstowe na wybrany element
                 switch (to)
                 {
+                    case NONE:
+                        m_bottom_toolbar.clearContextLayout(); //TODO zobaczyć czy o to chodziło
+                        break;
                     case TEXT:
                         m_bottom_toolbar.setContextAction(toolbarMenus[TEXT_CONTEXT_MENU]);
                         Toast.makeText(getApplicationContext(), "Zaznaczono tekst", Toast.LENGTH_SHORT).show();
@@ -171,6 +198,7 @@ public class EditNoteActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 m_note_view.addListElement();
+
             }
         });
         m_bottom_toolbar.addConstantsButton(0, android.R.drawable.ic_input_add, "AddText", menu);
@@ -231,6 +259,8 @@ public class EditNoteActivity extends AppCompatActivity {
         }
     }
 
+
+
     /**
      * Zapisuje utworzoną notatkę w bazie danych. Jeżeli notatka jest edytowana zostanie zaktualizowana.
      * Jeżeli tworzona jest nowa notatka zostanie zapisana w bazie dancyh.
@@ -275,21 +305,34 @@ public class EditNoteActivity extends AppCompatActivity {
             m_note.setCreationDate(nowDate);
             m_note.setUpdateDate(nowDate);
             long savedNoteID = noteDao.add(m_note); //zapisywanie notatki
-            if (savedNoteID > 0 && m_note.getReminder() != null) { // sprawdzanie czy zapis notatki się udał i czy przypomnienie zostało przypisane
-                m_note.getReminder().setNoteID(savedNoteID); // ustawienie numeru id do przypomnienie
-                if (saveReminder(m_note.getReminder())) //zapisywanie przypomnienia. Jezeli przypomnienie nie zostało dodane nic nie jest zapisywana i zwracana jest wartość true
+            if (savedNoteID > 0) { // sprawdzanie czy zapis notatki się udał i czy przypomnienie zostało przypisane
+                if(m_note.getReminder() != null) // jeżeli przypomnienie jest ustawione zapisujemy je w bazie
                 {
+                    return saveReminder(m_note.getReminder(), savedNoteID);
+                } else { // w przeciwnym razie kończymy powodzeniem
                     Toast.makeText(getApplicationContext(), getString(R.string.success_save_note), Toast.LENGTH_SHORT).show(); //komunikat o powodzeniu
-                    startReminderAlarm(m_note.getReminder()); // TODO to można dać w jakimś innym miejscu. Później się jeszcze zobaczy
                     return true;
-                } else {
-                    //TODO zastanowić się, czy usunąć wcześniej zapisaną notatkę, czy wyświetlić komunikat o niepowodzeniu zapisu powiadomienia i zostawić notatkę
-                    // zostawienie notatki chyba będzie lepszym pomysłem, ponieważ nie będzie trzeba ustawiać jeszcze raz
                 }
             }
+            // jeżeli zapis w bazie się nie udał, metoda przechodzi dalej, wyświetla komunikat o błędzie i zwraca false
         }
         // jeżeli dojdzie do tego miejsca, oznacza to, że zapis się nie udał
         Toast.makeText(getApplicationContext(), getString(R.string.failed_save_note), Toast.LENGTH_SHORT).show();
+        return false;
+    }
+
+    private boolean saveReminder(Reminder reminder, long savedNoteID)
+    {
+        m_note.getReminder().setNoteID(savedNoteID); // ustawienie numeru id do przypomnienie
+        if (saveReminder(m_note.getReminder())) //zapisywanie przypomnienia. Jezeli przypomnienie nie zostało dodane nic nie jest zapisywana i zwracana jest wartość true
+        {
+            Toast.makeText(getApplicationContext(), getString(R.string.success_save_note), Toast.LENGTH_SHORT).show(); //komunikat o powodzeniu
+            startReminderAlarm(m_note.getReminder()); // TODO to można dać w jakimś innym miejscu. Później się jeszcze zobaczy
+            return true;
+        } else {
+            //TODO zastanowić się, czy usunąć wcześniej zapisaną notatkę, czy wyświetlić komunikat o niepowodzeniu zapisu powiadomienia i zostawić notatkę
+            // zostawienie notatki chyba będzie lepszym pomysłem, ponieważ nie będzie trzeba ustawiać jeszcze raz
+        }
         return false;
     }
 

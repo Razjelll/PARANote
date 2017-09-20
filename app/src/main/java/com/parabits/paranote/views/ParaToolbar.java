@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutCompat;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -37,7 +38,6 @@ public class ParaToolbar extends LinearLayout{
 
 
     private ToolbarMenuView m_menu_list_view;
-    private ToolbarMenuAdapter m_menu_adapter;
 
     private boolean m_menu_open;
 
@@ -66,7 +66,7 @@ public class ParaToolbar extends LinearLayout{
         {
             verticalInit();
         } else {
-            //TODO horizontalInit()
+            horizontalInit();
         }
     }
 
@@ -75,18 +75,32 @@ public class ParaToolbar extends LinearLayout{
         //ustawienie orientacji
         this.setOrientation(VERTICAL);
 
-        setupVerticalClickableLayout();
-        setupMenu();
+        setupEmptyClickableLayout(VERTICAL);
+        setupMenu(VERTICAL);
         setupToolbarLayout(HORIZONTAL); //pasek narzędzi ma odwrotną orientację niż układ zawierający pasek i menu
-
     }
 
-    private void setupVerticalClickableLayout()
+    private void horizontalInit()
     {
-        // ustawienie niewidzialnego widoku, którego zadaniem jest wychwytywanie klików
-        // spoza widzialnej części toolbara
+        this.setOrientation(HORIZONTAL);
+
+        setupContextLayout(VERTICAL, this); // pasek przycisków kontekstowych ułożony jest wertykalnie
+        setupEmptyClickableLayout(HORIZONTAL);
+        setupMenu(HORIZONTAL);
+        setupToolbarLayout(VERTICAL); // pasek narzędzi także ma orientaję odwrotna do widoku
+    }
+
+    private void setupEmptyClickableLayout(int orientation)
+    {
         View view = new View(getContext());
-        view.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1.f));
+        if(orientation == VERTICAL)
+        {
+            view.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1.f));
+        } else { //HORIZONTAL
+            LayoutParams params = new LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.f);
+            params.gravity = Gravity.BOTTOM;
+            view.setLayoutParams(params);
+        }
         view.setFocusable(false);
         this.addView(view);
     }
@@ -100,11 +114,23 @@ public class ParaToolbar extends LinearLayout{
         m_toolbar_layout.bringToFront();
         this.addView(m_toolbar_layout);
 
+        if(toolbarOrientation == HORIZONTAL)
+        {
+            m_toolbar_layout.addView(getSeparator(toolbarOrientation)); //separator
+            setupContextLayout(toolbarOrientation, m_toolbar_layout); // menu przycisków kontekstowych
+            m_toolbar_layout.addView(getSeparator(toolbarOrientation)); //separator
+            setupMenuButton(); //przycisk menu
+        } else {
+            m_toolbar_layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+            setupMenuButton();
+        }
 
-        m_toolbar_layout.addView(getSeparator(toolbarOrientation)); //separator
-        setupContextLayout(toolbarOrientation); // menu przycisków kontekstowych
-        m_toolbar_layout.addView(getSeparator(toolbarOrientation)); //separator
-        setupMenuButton(); //przycisk menu
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent event)
+    {
+        return false;
     }
 
     private View getSeparator(int orientation)
@@ -122,16 +148,17 @@ public class ParaToolbar extends LinearLayout{
         return separator;
     }
 
-    private void setupMenu()
+    private void setupMenu(int orientation)
     {
-        m_menu_list_view = new ToolbarMenuView(getContext());
+        m_menu_list_view = new ToolbarMenuView(getContext(), orientation==VERTICAL);
         m_menu_list_view.setBackgroundColor(Color.WHITE);
         m_menu_list_view.setVisibility(GONE);
         m_menu_list_view.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
         m_menu_list_view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                m_menu_adapter.getItem(i).getListener().onClick(null); //TODO przetestować to dokładnie
+                //m_menu_adapter.getItem(i).getListener().onClick(null); //TODO przetestować to dokładnie
+                m_menu_list_view.getItem(i).getListener().onClick(null); //TODO zobaczyć właściwie co się tutaj dzieje
                 m_menu_list_view.hide();
             }
         });
@@ -139,7 +166,7 @@ public class ParaToolbar extends LinearLayout{
         this.addView(m_menu_list_view);
     }
 
-    private void setupContextLayout(int orientation)
+    private void setupContextLayout(int orientation, ViewGroup parent)
     {
         // utowrzenie układu przewijającego. W zależności od orientacji ekranu tworzony jest
         // układ przewijany w dół lub w bok
@@ -152,13 +179,17 @@ public class ParaToolbar extends LinearLayout{
             m_context_buttons.setOrientation(HORIZONTAL);
             scrollParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.f);
         } else { // VERTICAL
-            scrollView = new ScrollView(getContext());
+            ScrollView verticalScrollView = new ScrollView(getContext());
+            verticalScrollView.setFillViewport(true);
+            scrollView = verticalScrollView;
             m_context_buttons.setOrientation(LinearLayout.VERTICAL);
-            scrollParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 0, 1.f);
+            m_context_buttons.setBackgroundColor(Color.WHITE);
+            scrollParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
         }
         scrollView.setLayoutParams(scrollParams);
         scrollView.addView(m_context_buttons);
-        m_toolbar_layout.addView(scrollView);
+        parent.addView(scrollView);
     }
 
     private void setupMenuButton()
@@ -203,8 +234,7 @@ public class ParaToolbar extends LinearLayout{
             public void onClick(View view) {
                 // TODO sprawdzić jakie menu zostało ostanio otwierane
 
-                m_menu_adapter = new ToolbarMenuAdapter(getContext(), android.R.layout.simple_spinner_item, menu.getItems());
-                m_menu_list_view.setAdapter(m_menu_adapter);
+                m_menu_list_view.setItems(menu.getItems());
                 m_menu_list_view.show();
             }
         };
@@ -281,116 +311,5 @@ public class ParaToolbar extends LinearLayout{
 
 }
 
-class ToolbarMenuAdapter extends ArrayAdapter
-{
-    private Context m_context;
-    private List<ToolbarMenuItem> m_items;
 
-    public ToolbarMenuAdapter(@NonNull Context context, @LayoutRes int resource, List<ToolbarMenuItem> data) {
-        super(context, resource, data);
-        m_context = context;
-        m_items = data;
-    }
-
-
-    @Override
-    public View getView(int position, View view, ViewGroup viewGroup)
-    {
-        View rowView = view;
-        ViewHolder viewHolder;
-        if(rowView == null)
-        {
-            LinearLayout layout = new LinearLayout(getContext());
-            layout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            layout.setGravity(Gravity.CENTER_VERTICAL);
-            ImageButton imageButton = new ImageButton(getContext());
-            imageButton.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-            imageButton.setClickable(false);
-            imageButton.setFocusable(false);
-            imageButton.setFocusableInTouchMode(false);
-            TextView textView = new TextView(getContext());
-            textView.setGravity(Gravity.CENTER_VERTICAL);
-            textView.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, 1.f));
-            textView.setClickable(false);
-            textView.setFocusable(false);
-            textView.setFocusableInTouchMode(false);
-            layout.addView(imageButton);
-            layout.addView(textView);
-            viewHolder = new ViewHolder();
-            viewHolder.setImageButton(imageButton);
-            viewHolder.setTextView(textView);
-            rowView = layout;
-
-            rowView.setTag(viewHolder);
-        } else
-        {
-            viewHolder = (ViewHolder) rowView.getTag();
-        }
-        ToolbarMenuItem item = m_items.get(position);
-        //rowView.setOnClickListener(item.getListener());
-        rowView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(getContext(), "Kliknięto item", Toast.LENGTH_SHORT).show();
-            }
-        });
-        viewHolder.setImage(item.getResource());
-        viewHolder.setText(item.getText());
-
-        return rowView;
-    }
-
-    @Override
-    public ToolbarMenuItem getItem(int position)
-    {
-        return m_items.get(position);
-    }
-
-    private class ViewHolder
-    {
-        private ImageView m_image_button;
-        private TextView m_text_view;
-
-
-        public void setImageButton(ImageButton imageButton)
-        {
-            m_image_button = imageButton;
-            m_image_button.setClickable(false);
-        }
-
-        public void setTextView(TextView textView)
-        {
-           m_text_view = textView;
-        }
-
-        public void setImage(int resource)
-        {
-            m_image_button.setImageResource(resource);
-        }
-
-        public void setText(String text)
-        {
-           m_text_view.setText(text);
-        }
-    }
-}
-
-
-class ToolbarMenuItem
-{
-    private int m_image_resource;
-    private String m_text;
-    private View.OnClickListener m_listener;
-
-    public ToolbarMenuItem(int resource, String text, View.OnClickListener listener)
-    {
-        m_image_resource = resource;
-        m_text = text;
-        m_listener = listener;
-    }
-
-    public int getResource() {return m_image_resource;}
-    public String getText() {return m_text;}
-    public View.OnClickListener getListener() {return m_listener;}
-}
 

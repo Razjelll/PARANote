@@ -1,28 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     >
     <EditText android:id="@+id/title_edit_text"
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/title"/>
+        android:hint="@string/title"
+        />
 
     <com.parabits.paranote.views.NoteView
         android:id="@+id/note_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/title_edit_text"
-        android:layout_marginBottom="@dimen/bottom_toolbar_height"
         />
-
-
-    <com.parabits.paranote.views.ParaToolbar
-        android:id="@+id/bottom_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"/>
-
-</RelativeLayout>
+</LinearLayout>

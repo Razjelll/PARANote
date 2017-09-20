@@ -1,10 +1,16 @@
 package com.parabits.paranote.data.parser;
 
 
+import android.content.Context;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import com.parabits.paranote.views.INoteElementView;
+
 import java.util.ArrayList;
 import java.util.List;
 
-abstract public class NoteElement {
+abstract public class NoteElement{
 
     public static final  String MARKER_START = "<";
     public static final String MARKER_END = "/>";
@@ -12,6 +18,7 @@ abstract public class NoteElement {
     public static final String CONTENT_END = "<";
     public static final String TEXT_MARKER = "text";
     public static final String PHOTO_MARKER = "photo";
+    public static final String LIST_MARKER = "list";
     public static final String RECORD_MARKER = "record";
     public static final String HANDWRITTING_MARKER = "hand";
     public static final String CODE_MARKER = "code";
@@ -20,6 +27,7 @@ abstract public class NoteElement {
     {
         TEXT(TEXT_MARKER),
         PHOTO(PHOTO_MARKER),
+        LIST(LIST_MARKER),
         RECORD(RECORD_MARKER),
         HANDWRITTING(HANDWRITTING_MARKER),
         CODE(CODE_MARKER);
@@ -113,4 +121,18 @@ abstract public class NoteElement {
 
         return builder.toString();
     }
+
+    public abstract INoteViewCreator getCreator();
+
+    public interface INoteViewCreator
+    {
+        INoteElementView createView(Context context);
+        //TODO dodać wszystko co jest potrzebne
+    }
+
+    public interface INoteElementDescriptor<View extends INoteElementView>
+    {
+        String getDescription(View view);
+    }
+
 }

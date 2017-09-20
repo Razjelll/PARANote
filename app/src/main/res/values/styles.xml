@@ -49,4 +49,7 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="NoteEditText" parent="Base.V12.Widget.AppCompat.EditText">
+        <item name="background">@android:color/transparent</item>
+    </style>
 </resources>

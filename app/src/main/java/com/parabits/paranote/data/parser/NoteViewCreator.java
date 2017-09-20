@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import com.parabits.paranote.utils.BitmapUtils;
 import com.parabits.paranote.views.INoteElementView;
 import com.parabits.paranote.views.NoteImageView;
+import com.parabits.paranote.views.NoteListView;
 import com.parabits.paranote.views.NoteTextView;
 
 public class NoteViewCreator {
@@ -51,4 +52,6 @@ public class NoteViewCreator {
 
         return imageView;
     }
+
+
 }

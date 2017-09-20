@@ -27,12 +27,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/appBarLayout"
-        android:layout_marginBottom = "@dimen/bottom_toolbar_height" />
+        android:layout_marginRight = "@dimen/bottom_toolbar_height"
+        android:layout_marginLeft = "@dimen/bottom_toolbar_height"/>
+
 
     <com.parabits.paranote.views.ParaToolbar
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/appBarLayout"
         android:id="@+id/bottom_toolbar"/>
 
 </RelativeLayout>
