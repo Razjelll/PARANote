@@ -72,5 +72,6 @@
     <string name="failed_update_note">Aktualizacja notatki nie udała się</string>
     <string name="title_activity_reminder">ReminderActivity</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_note">NoteActivity</string>
 
 </resources>

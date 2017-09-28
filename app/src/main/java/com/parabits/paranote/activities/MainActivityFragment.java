@@ -1,5 +1,6 @@
 package com.parabits.paranote.activities;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -10,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.parabits.paranote.R;
-import com.parabits.paranote.adapters.NoteAdapter;
+import com.parabits.paranote.adapters.NoteListAdapter;
 import com.parabits.paranote.adapters.NoteItem;
 
 import java.util.ArrayList;
@@ -45,11 +46,12 @@ public class MainActivityFragment extends Fragment {
         items.add(item1);
         items.add(item2);
 
-        NoteAdapter adapter = new NoteAdapter(items, m_recycler_view);
-        adapter.setOnClickListener(new NoteAdapter.OnItemClickListener() {
+        NoteListAdapter adapter = new NoteListAdapter(items, m_recycler_view);
+        adapter.setOnClickListener(new NoteListAdapter.OnItemClickListener() {
             @Override
             public void onClick(NoteItem note) {
-                Toast.makeText(getActivity(), "Kliknięto na item", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), NoteActivity.class);
+                startActivity(intent);
             }
 
             @Override

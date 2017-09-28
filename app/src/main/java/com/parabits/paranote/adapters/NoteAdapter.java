@@ -1,98 +1,76 @@
 package com.parabits.paranote.adapters;
 
 import android.content.Context;
-import android.support.annotation.LayoutRes;
-import android.support.annotation.NonNull;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.support.v7.widget.LinearLayoutCompat;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.parabits.paranote.R;
-import com.parabits.paranote.data.models.Note;
+import com.parabits.paranote.data.models.NoteElement;
+import com.parabits.paranote.utils.BitmapUtils;
+import com.parabits.paranote.views.NoteListView;
+import com.parabits.paranote.views.PhotoView;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
-public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder>
-{
-    public interface OnItemClickListener
+public class NoteAdapter  extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder>{
+
+    private List<NoteElement> m_items;
+    private Context m_context;
+
+    public NoteAdapter()
     {
-        void onClick(NoteItem note);
-        void onLongClick(NoteItem note);
+        m_items = new ArrayList<>();
     }
 
-    private OnItemClickListener m_on_click_listener;
-    private List<NoteItem> m_items;
-
-    public void setOnClickListener(OnItemClickListener listener)
+    public void addElement(NoteElement element)
     {
-        m_on_click_listener = listener;
+        m_items.add(element);
+        notifyDataSetChanged();
     }
 
-    public NoteAdapter(List<NoteItem> items, RecyclerView recyclerView)
+    @Override
+    public int getItemViewType(int position)
     {
-        m_items = items;
-        prepareItemTouchHelper(recyclerView);
-    }
-
-    private void prepareItemTouchHelper(RecyclerView recyclerView)
-    {
-        ItemTouchHelper.Callback callback = new ItemTouchHelper.Callback() {
-            @Override
-            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
-                return makeFlag(ItemTouchHelper.ACTION_STATE_DRAG, ItemTouchHelper.DOWN | ItemTouchHelper.UP | ItemTouchHelper.START | ItemTouchHelper.END);
-            }
-
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                Collections.swap(m_items,viewHolder.getAdapterPosition(), target.getAdapterPosition());
-                notifyItemMoved(viewHolder.getAdapterPosition(), target.getAdapterPosition());
-                return true;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-
-            }
-        };
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(callback);
-        itemTouchHelper.attachToRecyclerView(recyclerView);
+        return m_items.get(position).getType();
     }
 
     @Override
     public NoteViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View inflatedView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_note, parent, false);
-        return new NoteViewHolder(inflatedView);
+        m_context = parent.getContext();
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view;
+        switch (viewType)
+        {
+            case NoteElement.TEXT:
+                view = inflater.inflate(R.layout.item_text_element, parent, false);
+                return new TextViewHolder(view);
+
+            case NoteElement.IMAGE:
+                view = inflater.inflate(R.layout.item_image_element, parent, false);
+                return new ImageViewHolder(view);
+            case NoteElement.LIST:
+                view = inflater.inflate(R.layout.item_list_element, parent,false);
+                return new ListViewHolder(view);
+            default:
+                throw new IllegalArgumentException("Incorrect note element type");
+        }
     }
 
     @Override
-    public void onBindViewHolder(NoteViewHolder holder, final int position) {
-        holder.getView().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(m_on_click_listener != null)
-                {
-                    m_on_click_listener.onClick(m_items.get(position));
-                }
-            }
-        });
-        holder.getView().setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                if(m_on_click_listener != null)
-                {
-                    m_on_click_listener.onLongClick(m_items.get(position));
-                    return true;
-                }
-                return false;
-            }
-        });
-        holder.bindNote(m_items.get(position));
-
+    public void onBindViewHolder(NoteViewHolder holder, int position) {
+        //TODO dodać słuchaczy
+        holder.bindData(m_items.get(position));
     }
 
     @Override
@@ -100,38 +78,71 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
         return m_items.size();
     }
 
-    class NoteViewHolder extends RecyclerView.ViewHolder
+    public abstract class NoteViewHolder extends RecyclerView.ViewHolder
     {
-        private View m_view; //widok calego elementu, potrzebny, aby dodać do niego listenery
-        private TextView m_title_text_view;
-        private TextView m_creation_date_text_view;
-
         public NoteViewHolder(View itemView) {
             super(itemView);
-            m_view = itemView;
-            m_title_text_view = itemView.findViewById(R.id.title_text_view);
-            m_creation_date_text_view = itemView.findViewById(R.id.create_date_text_view);
         }
 
-        public void setTitle(String title){
-            m_title_text_view.setText(title);
+        public abstract void bindData(NoteElement element);
+    }
+
+    private class TextViewHolder extends NoteViewHolder
+    {
+        private EditText m_edit_text;
+
+        public TextViewHolder(View itemView) {
+            super(itemView);
+            m_edit_text = itemView.findViewById(R.id.edit_text);
         }
 
-        public void setCreationDate(String creationDate)
+        public void bindData(NoteElement element)
         {
-            m_creation_date_text_view.setText(creationDate);
+            m_edit_text.setText(element.getContent());
         }
+    }
 
-        public void bindNote(NoteItem note)
+    private class ImageViewHolder extends NoteViewHolder
+    {
+        private PhotoView m_image_view;
+        private Bitmap m_last_bitmap;
+
+        public ImageViewHolder(View itemView)
         {
-            m_title_text_view.setText(note.getTitle());
-            m_creation_date_text_view.setText(note.getCreationDate());
+            super(itemView);
+            m_image_view = itemView.findViewById(R.id.image_view);
+            m_image_view.setResolutionWidth(300);
+            m_image_view.setResolutionHeight(400);
         }
 
-        View getView() {return m_view;}
+        public void bindData(NoteElement element)
+        {
+            m_image_view.loadImage(element.getContent());
+        }
+    }
+
+    private class ListViewHolder extends NoteViewHolder
+    {
+        private NoteListView m_list_view;
+        private NoteListViewAdapter m_adapter;
+
+        ListViewHolder(View itemView)
+        {
+            super(itemView);
+            m_list_view = itemView.findViewById(R.id.list);
+            m_adapter = new NoteListViewAdapter();
+            m_list_view.setLayoutManager(new LinearLayoutManager(itemView.getContext()));
+            m_list_view.setHasFixedSize(true);
+            m_list_view.setAdapter(m_adapter);
+
+            // przy tworzeniu listy od razu dodajemy pusty element, aby lista był widoczna i użytkownik nie musiał podejmować
+            // żadnych kroków, aby mieć dostęp do listy
+            m_list_view.addItem();
+        }
+
+        @Override
+        public void bindData(NoteElement element) {
+
+        }
     }
 }
-
-
-
-

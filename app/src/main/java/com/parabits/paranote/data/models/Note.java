@@ -3,7 +3,6 @@ package com.parabits.paranote.data.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.parabits.paranote.data.parser.NoteElement;
 
 import java.util.List;
 
